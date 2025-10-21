@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Charlie's Axolotl Pet</title>
-<meta property="og:title" content="Charlie's Axolotl Pet" />
-<meta name="twitter:title" content="Charlie's Axolotl Pet" />
+<title>Axolotl Pet</title>
+<meta property="og:title" content="Axolotl Pet" />
+<meta name="twitter:title" content="Axolotl Pet" />
 <style>
   :root{
     --bg:#f7f5ff; --card:#fff; --text:#222; --muted:#6b6b6b; --accent:#7c5cff;
@@ -18,9 +18,12 @@
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
     color:var(--text);
   }
-  .wrap{max-width:520px;margin:0 auto;padding:16px 12px calc(env(safe-area-inset-bottom, 0) + 24px);}
+  .wrap{max-width:520px;margin:0 auto;padding:16px 12px calc(env(safe-area-inset-bottom, 0) + 24px); transition:max-width .2s ease;}
+  @media (min-width: 900px){
+    .wrap{max-width: 1100px;}
+  }
   .card{background:var(--card);border-radius:20px;box-shadow:0 10px 30px rgba(50,34,120,.1);padding:10px 10px 14px;}
-  .topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap}
   .title{font-weight:800;letter-spacing:.3px;font-size:16px;display:flex;align-items:center;gap:8px;}
   .title .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);}
   .controls{display:flex;align-items:center;gap:8px;}
@@ -35,7 +38,7 @@
     position:absolute; left:8px; top:8px;
     background:rgba(255,255,255,0.9); border:1px solid rgba(0,0,0,0.08);
     border-radius:10px; padding:4px 8px; font-size:12px; display:flex; align-items:center; gap:6px;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px); z-index:4;
   }
   .age-badge .icon{width:14px;height:14px;border-radius:3px;background:linear-gradient(180deg,#ffb3d1,#ff87c5); position:relative;}
   .age-badge .icon::after{content:''; position:absolute; left:3px; top:-3px; width:8px; height:4px; border-radius:2px; background:#fff;}
@@ -43,24 +46,44 @@
   .bar{background:#f2f0ff;border-radius:999px;height:12px;position:relative;overflow:hidden;}
   .bar span{position:absolute;left:0;top:0;bottom:0;width:50%;background:linear-gradient(90deg,#9d82ff,#ff7ad9);border-radius:999px;transition:width .25s ease;}
   .barlabel{font-size:12px;color:var(--muted);margin:0 6px 2px;display:flex;justify-content:space-between;}
-  .actions{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px;}
+  .actions{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:10px;}
+  @media (min-width: 900px){ .actions{grid-template-columns:repeat(6, auto); justify-content:flex-start} }
   .btn{border:none;padding:10px 8px;border-radius:14px;background:#f5f3ff;cursor:pointer;font-weight:700;font-size:12px;
        display:flex;flex-direction:column;align-items:center;gap:6px;box-shadow:inset 0 0 0 1px rgba(124,92,255,.15);}
   .btn:active{transform:translateY(1px) scale(.99);}
   .btn .emoji{font-size:20px;}
   .hint{text-align:center;font-size:12px;color:var(--muted);margin-top:10px;}
+
   /* Decor menu */
   #decorMenu{
-    position:absolute; right:8px; top:8px; z-index:4;
+    position:absolute; right:8px; top:8px; z-index:5;
     background:rgba(255,255,255,0.98); border:1px solid rgba(0,0,0,0.1); border-radius:12px; padding:8px;
-    display:none; box-shadow:0 12px 30px rgba(0,0,0,.15);
+    display:none; box-shadow:0 12px 30px rgba(0,0,0,.15); min-width:180px;
   }
+  #decorMenu .title{font-weight:800; margin-bottom:6px;}
   #decorMenu button{
     display:flex; align-items:center; gap:8px;
     border:none; background:#f5f3ff; padding:8px 10px; border-radius:10px; font-weight:700; cursor:pointer; margin:4px 0;
     box-shadow:inset 0 0 0 1px rgba(124,92,255,.15);
   }
-  #decorMenu .title{font-weight:800; margin-bottom:6px;}
+  #editHint{
+    position:absolute; right:8px; bottom:8px; z-index:5; display:none;
+    background:rgba(255,255,255,0.92); border:1px solid rgba(0,0,0,0.1); border-radius:10px; padding:6px 8px; font-size:12px;
+  }
+
+  /* Owner onboarding modal */
+  #ownerModal{
+    position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9999;
+    background:rgba(10,10,20,.45); backdrop-filter: blur(3px);
+  }
+  #ownerModal .panel{
+    background:#fff; padding:16px; border-radius:14px; width:min(92vw, 420px); box-shadow:0 20px 50px rgba(0,0,0,.25);
+  }
+  #ownerModal h3{margin:0 0 10px 0}
+  #ownerModal .row{display:flex; gap:8px}
+  #ownerModal input{flex:1; border:1px solid #e5e5ee;border-radius:12px;padding:10px}
+  #ownerModal button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;background:#7c5cff;color:#fff;cursor:pointer}
+
   /* Debug overlay */
   #debug{position:fixed;left:8px;bottom:8px;max-width:90vw;background:#2b2b2b;color:#fff;font:12px/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
          padding:8px 10px;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.25);display:none;white-space:pre-wrap;z-index:9999;}
@@ -70,9 +93,9 @@
 <div class="wrap">
   <div class="card">
     <div class="topbar">
-      <div class="title"><span class="dot"></span> Charlie's Axolotl Pet</div>
+      <div class="title"><span class="dot"></span> <span id="titleText">Axolotl Pet</span></div>
       <div class="controls">
-        <input id="nameInput" type="text" placeholder="Name me…" />
+        <input id="nameInput" type="text" placeholder="Pet’s name…" />
         <input id="colorInput" type="color" value="#f6b6d2" title="Axolotl color" />
       </div>
     </div>
@@ -82,13 +105,17 @@
       <div class="age-badge" id="ageBadge">
         <span class="icon"></span><span id="ageText">1 day old</span>
       </div>
+
       <div id="decorMenu">
-        <div class="title">Add decor</div>
+        <div class="title">Decor</div>
         <button id="addPlant">🌿 Add plant</button>
         <button id="addRock">🪨 Add rock</button>
         <button id="addHouse">🏠 Add little house</button>
+        <button id="editDecor">✏️ Edit (tap to remove)</button>
+        <button id="clearDecor">🗑 Clear all</button>
         <button id="closeDecor">✖ Close</button>
       </div>
+      <div id="editHint">Edit mode: tap an item to remove</div>
     </div>
 
     <div class="bars">
@@ -108,9 +135,22 @@
       <button class="btn" id="sleep"><span class="emoji">🌙</span>Sleep</button>
       <button class="btn" id="clean"><span class="emoji">🫧</span>Clean</button>
       <button class="btn" id="decor"><span class="emoji">🏡</span>Decor</button>
+      <button class="btn" id="ownerBtn"><span class="emoji">👤</span>Owner</button>
     </div>
 
     <div class="hint">Tip: tap the tank to drop a food flake. Everything autosaves.</div>
+  </div>
+</div>
+
+<!-- Owner onboarding -->
+<div id="ownerModal" role="dialog" aria-modal="true">
+  <div class="panel">
+    <h3>Welcome! What’s your name?</h3>
+    <div class="row">
+      <input id="ownerInput" type="text" placeholder="Your name" />
+      <button id="ownerSave">Save</button>
+    </div>
+    <p style="font-size:12px;color:#666;margin-top:8px">We’ll personalize the title and thank-you messages.</p>
   </div>
 </div>
 
@@ -118,21 +158,19 @@
 
 <script>
 /* =========================
-   Mobile-safe canvas setup
+   Canvas sizing & responsive aspect
    ========================= */
 const holder = document.getElementById('canvasHolder');
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d', { alpha: false });
-const ageBadge = document.getElementById('ageBadge');
-const ageText  = document.getElementById('ageText');
-const decorMenuEl = document.getElementById('decorMenu');
+
+function isDesktop(){ return window.innerWidth >= 900; }
 
 function sizeCanvas(){
   const cssW = Math.max(300, holder.clientWidth || 360);
-  const cssH = Math.round(cssW * 16/9);
+  const cssH = Math.round(cssW * (isDesktop() ? 9/16 : 16/9)); // desktop: landscape, mobile: tall portrait-ish
   canvas.style.width = cssW + 'px';
   canvas.style.height = cssH + 'px';
-  ageBadge.style.transform = 'translateZ(0)';
 
   const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
   const w = cssW * dpr, h = cssH * dpr;
@@ -141,6 +179,7 @@ function sizeCanvas(){
   ctx.scale(dpr, dpr);
 
   drawTankBackground(canvas.clientWidth, canvas.clientHeight);
+  rebuildDecorLayers(); // recalc decor draw functions for new size
 }
 window.addEventListener('resize', sizeCanvas, { passive: true });
 window.addEventListener('orientationchange', () => setTimeout(sizeCanvas, 50), { passive: true });
@@ -148,15 +187,16 @@ window.addEventListener('orientationchange', () => setTimeout(sizeCanvas, 50), {
 /* =========================
    State, UI & persistence
    ========================= */
-const STORAGE_KEY = 'axolotl_tank_decor_age_v1';
+const STORAGE_KEY = 'axolotl_full_v3';
 const defaultState = () => ({
+  ownerName: null,
   name: 'Axie',
   color: '#f6b6d2',
   stats: { hunger: 70, fun: 70, energy: 70, clean: 70 },
   lastTick: Date.now(),
   birthAt: Date.now(),
   sleeping: false,
-  decor: [] // {type:'plant'|'rock'|'house', x, y}
+  decor: [] // items with fixed params: {id,type,x,y, params:{...}}
 });
 function loadState(){ try{ const raw = localStorage.getItem(STORAGE_KEY); if(!raw) return defaultState();
   const data = JSON.parse(raw); return {...defaultState(), ...data, stats:{...defaultState().stats, ...(data.stats||{})}};
@@ -164,6 +204,13 @@ function loadState(){ try{ const raw = localStorage.getItem(STORAGE_KEY); if(!ra
 function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch{} }
 function clamp(v){ return Math.max(0, Math.min(100, v)); }
 let state = loadState();
+let ownerName = state.ownerName || null;
+
+const titleEl  = document.getElementById('titleText');
+const ownerModal = document.getElementById('ownerModal');
+const ownerInput = document.getElementById('ownerInput');
+const ownerSave  = document.getElementById('ownerSave');
+const ownerBtn   = document.getElementById('ownerBtn');
 
 const nameInput = document.getElementById('nameInput');
 const colorInput = document.getElementById('colorInput');
@@ -179,8 +226,26 @@ const cleanVal  = document.getElementById('cleanVal');
 nameInput.value = state.name;
 colorInput.value = state.color;
 
+function updateTitle(){
+  const n = ownerName || 'Owner';
+  titleEl.textContent = `${n}'s Axolotl Pet`;
+  document.title = `${n}'s Axolotl Pet`;
+}
+
 nameInput.addEventListener('input', ()=>{ state.name = nameInput.value || 'Axie'; saveState(); });
 colorInput.addEventListener('input', ()=>{ state.color = colorInput.value; saveState(); });
+
+ownerBtn.onclick = ()=>{ ownerInput.value = ownerName || ''; ownerModal.style.display = 'flex'; };
+ownerSave.onclick = ()=>{
+  const val = (ownerInput.value||'').trim();
+  if(val){ ownerName = val; state.ownerName = val; saveState(); updateTitle(); }
+  ownerModal.style.display='none';
+};
+ownerModal.addEventListener('click', (e)=>{ if(e.target===ownerModal) ownerModal.style.display='none'; });
+
+if(!ownerName){ // first-run ask
+  setTimeout(()=>{ ownerModal.style.display = 'flex'; }, 0);
+}
 
 function moodScore(){ const s = state.stats;
   return Math.max(0, Math.min(1, (s.hunger + s.fun + s.energy + s.clean)/400)); }
@@ -196,18 +261,18 @@ function refreshBars(){ const s = state.stats;
   setBar(energyBar, s.energy, energyVal); setBar(cleanBar, s.clean, cleanVal); }
 
 /* =========================
-   Environment & visuals
+   Background & environment
    ========================= */
 const bg = document.createElement('canvas');
 const bgCtx = bg.getContext('2d');
 
 // Sleep & bed state
 let bed = { x: 0, y: 0, w: 0, h: 0 };
-const sleep = { mode: 'awake', dark: 0, zzz: [] }; // mode: 'awake' | 'going' | 'asleep'
+const sleep = { mode: 'awake', dark: 0, zzz: [] }; // 'awake' | 'going' | 'asleep'
 
-// Decor runtime caches (for house overlay framing)
-let decorBack = [];  // items to draw before axolotl
-let decorFront = []; // items to draw after axolotl (house frame)
+// Decor caches
+let decorBack = [];   // functions that draw using stored params
+let decorFront = [];  // overlays (e.g., house frame)
 
 function drawTankBackground(w, h){
   if (w <= 0 || h <= 0) return;
@@ -235,15 +300,12 @@ function drawTankBackground(w, h){
   drawPlantCluster(g, w*0.42, bedY, 7,  bedH*1.0);
   drawPlantCluster(g, w*0.86, bedY, 5,  bedH*0.85);
 
-  // --- Cozy bed (right side) ---
+  // bed
   const bx = w * 0.70, by = bedY - 4;
   const bw = 70, bh = 22;
-  g.fillStyle = '#8b6f47'; roundRect(g, bx - bw/2, by + 8, bw, 6, 3, true);          // base
-  g.fillStyle = '#9c805a'; roundRect(g, bx - (bw-12)/2, by - bh + 8, bw - 12, bh, 6, true); // cushion
+  g.fillStyle = '#8b6f47'; roundRect(g, bx - bw/2, by + 8, bw, 6, 3, true);
+  g.fillStyle = '#9c805a'; roundRect(g, bx - (bw-12)/2, by - bh + 8, bw - 12, bh, 6, true);
   bed = { x: bx, y: by + 8, w: bw - 12, h: bh };
-
-  // rebuild decor caches for current size
-  rebuildDecorLayers();
 }
 function pebbleColor(){ const p=['#cdbb96','#b8a57e','#e3d5b0','#a18f72','#d1c09d','#b59f7a']; return p[(Math.random()*p.length)|0]; }
 function drawRock(g, x, y, w, h){ g.save(); g.translate(x,y);
@@ -254,8 +316,12 @@ function drawCave(g, x, y, w, h){
   g.beginPath(); g.moveTo(-w/2,0); g.quadraticCurveTo(0,-h, w/2,0); g.quadraticCurveTo(0,-h*0.6, -w/2,0); g.fill();
   g.fillStyle = '#1c2426'; g.beginPath(); g.ellipse(0, h*0.12, w*0.36, h*0.25, 0, 0, Math.PI*2); g.fill(); g.restore();
 }
-function drawPlantCluster(g, baseX, baseY, stems, height){ for(let i=0;i<stems;i++){ const sway=(Math.random()*0.6+0.6);
-  drawPlant(g, baseX + (i - stems/2)*8, baseY, height*(0.7+Math.random()*0.5), sway); } }
+function drawPlantCluster(g, baseX, baseY, stems, height){
+  for(let i=0;i<stems;i++){
+    const sway=(Math.random()*0.6+0.6);
+    drawPlant(g, baseX + (i - stems/2)*8, baseY, height*(0.7+Math.random()*0.5), sway);
+  }
+}
 function drawPlant(g, x, baseY, h, k){
   g.save(); g.strokeStyle='#2f8f6e'; g.lineWidth=3; g.beginPath(); g.moveTo(x, baseY);
   for(let t=0;t<=1;t+=0.1){ const y = baseY - h*t; const curv = Math.sin(t*Math.PI)*k*20; const cx = x + curv; if(t===0) g.lineTo(x,y); else g.lineTo(cx,y); }
@@ -267,6 +333,7 @@ function drawPlant(g, x, baseY, h, k){
 function roundRect(g, x, y, w, h, r, fill){ const rr=Math.min(r,w/2,h/2);
   g.beginPath(); g.moveTo(x+rr,y); g.arcTo(x+w,y,x+w,y+h,rr); g.arcTo(x+w,y+h,x,y+h,rr); g.arcTo(x,y+h,x,y,rr); g.arcTo(x,y,x+w,y,rr); g.closePath(); if(fill) g.fill(); else g.stroke(); }
 
+/* Caustics */
 let causticT = 0;
 function drawCaustics(w,h,dt){
   causticT += dt; ctx.globalAlpha=0.06;
@@ -279,109 +346,76 @@ function drawCaustics(w,h,dt){
 }
 
 /* =========================
-   Axolotl (small, swimming, growth by age)
+   Axolotl with growth & behaviors
    ========================= */
 const axolotl = { x:120, y:260, vx:15, vy:0, dir:1, target:null, blinkT:0, eyeOpen:true, nibbleT:0, scale:1 };
 function setRandomTarget(){ const margin=60;
   axolotl.target = { x: margin + Math.random()*(canvas.clientWidth - margin*2),
                      y: canvas.clientHeight*0.35 + Math.random()*canvas.clientHeight*0.35 }; }
-
-function daysOld(){
-  const ms = Date.now() - (state.birthAt || Date.now());
-  return Math.max(1, Math.floor(ms / 86400000) + 1);
-}
+function daysOld(){ const ms = Date.now() - (state.birthAt || Date.now()); return Math.max(1, Math.floor(ms/86400000)+1); }
 function updateAgeBadge(){
   const d = daysOld();
-  ageText.textContent = d + (d===1 ? ' day old' : ' days old');
-  // growth curve: 0–30 days → 0.85 .. 1.25
-  const t = Math.min(30, d) / 30;
+  document.getElementById('ageText').textContent = d + (d===1 ? ' day old' : ' days old');
+  const t = Math.min(30, d) / 30; // growth over 30 days
   axolotl.scale = 0.85 + 0.40 * t;
 }
-
 function updateAxolotl(dt){
-  // If sleeping or going to sleep: target the bed
   if (sleep.mode === 'going' || sleep.mode === 'asleep') {
-    const targetX = bed.x;
-    const targetY = bed.y - 10;
+    const targetX = bed.x, targetY = bed.y - 10;
     axolotl.target = { x: targetX, y: targetY };
-
     const dx = targetX - axolotl.x, dy = targetY - axolotl.y, d = Math.hypot(dx,dy) || 1;
     const maxSpeed = 45, steer = 100;
     const desiredVx = (dx/d)*maxSpeed, desiredVy = (dy/d)*maxSpeed;
     axolotl.vx += (desiredVx - axolotl.vx)*Math.min(1, steer*dt/60);
     axolotl.vy += (desiredVy - axolotl.vy)*Math.min(1, steer*dt/60);
-
     if (d < 12) { sleep.mode = 'asleep'; axolotl.vx = 0; axolotl.vy = 0; }
   } else {
-    // Awake: choose target (ball > food > house opening > wander)
     let target = null; let minD = 1e9;
     if (play.active && play.ball) { target = { x: play.ball.x, y: play.ball.y }; }
-    if (!target) {
-      for (const f of food) { if (!f.eaten) {
-        const d = Math.hypot(f.x - axolotl.x, f.y - axolotl.y);
-        if (d < minD) { minD = d; target = f; }
-      } }
+    if (!target) for (const f of food) if (!f.eaten){
+      const d = Math.hypot(f.x - axolotl.x, f.y - axolotl.y); if(d<minD){minD=d; target=f;}
     }
-    // Occasionally inspect house interior if present
-    if (!target && Math.random() < 0.003) {
-      const house = state.decor.find(d => d.type === 'house');
-      if (house) {
-        target = { x: house.x, y: house.y - 10 };
-      }
+    // Occasionally inspect a house doorway if present
+    if (!target && Math.random() < 0.003){
+      const house = state.decor.find(d => d.type==='house');
+      if(house){ target = { x: house.x, y: (canvas.clientHeight*0.82) - 10 }; }
     }
-
     if (target) axolotl.target = { x: target.x, y: target.y };
     else if (!axolotl.target || Math.random() < 0.006) setRandomTarget();
 
-    if (axolotl.target) {
-      const dx = axolotl.target.x - axolotl.x;
-      const dy = axolotl.target.y - axolotl.y;
-      const d = Math.hypot(dx,dy) || 1;
+    if (axolotl.target){
+      const dx=axolotl.target.x-axolotl.x, dy=axolotl.target.y-axolotl.y, d=Math.hypot(dx,dy)||1;
       const maxSpeed = play.active ? 75 : 55, steer = 100;
-      const desiredVx = (dx/d)*maxSpeed, desiredVy = (dy/d)*maxSpeed;
-      axolotl.vx += (desiredVx - axolotl.vx)*Math.min(1, steer*dt/60);
-      axolotl.vy += (desiredVy - axolotl.vy)*Math.min(1, steer*dt/60);
+      const desiredVx=(dx/d)*maxSpeed, desiredVy=(dy/d)*maxSpeed;
+      axolotl.vx += (desiredVx-axolotl.vx)*Math.min(1,steer*dt/60);
+      axolotl.vy += (desiredVy-axolotl.vy)*Math.min(1,steer*dt/60);
     }
   }
-
-  // Integration & walls
   axolotl.vx *= (1 - 0.05*dt); axolotl.vy *= (1 - 0.05*dt);
   axolotl.x += axolotl.vx * dt; axolotl.y += axolotl.vy * dt;
   const m=24; axolotl.x = Math.max(m, Math.min(canvas.clientWidth-m, axolotl.x));
   axolotl.y = Math.max(canvas.clientHeight*0.28, Math.min(canvas.clientHeight*0.82, axolotl.y));
   if (Math.abs(axolotl.vx)>1) axolotl.dir = axolotl.vx>0 ? 1 : -1;
 
-  // Blink
   axolotl.blinkT += dt;
   if (axolotl.eyeOpen && axolotl.blinkT > 2.6 + Math.random()*0.6){ axolotl.eyeOpen=false; axolotl.blinkT=0; }
   else if (!axolotl.eyeOpen && axolotl.blinkT > 0.14){ axolotl.eyeOpen=true; axolotl.blinkT=0; }
 
-  // Eat nearby food (only when awake)
-  if (sleep.mode === 'awake') {
-    for (const f of food) { if (!f.eaten) {
+  if (sleep.mode === 'awake'){
+    for (const f of food) if(!f.eaten){
       const d = Math.hypot(f.x-axolotl.x, f.y-axolotl.y);
       if (d < 18){ f.eaten=true; axolotl.nibbleT=0.35; state.stats.hunger = clamp(state.stats.hunger + 8); state.stats.fun = clamp(state.stats.fun + 3); refreshBars(); }
-    } }
-  }
-
-  // Bop the ball (only when awake)
-  if (sleep.mode === 'awake' && play.active && play.ball) {
-    const b = play.ball; const dx=b.x-axolotl.x, dy=b.y-axolotl.y, d=Math.hypot(dx,dy);
-    if (d < b.r + 16) {
-      const nx = (dx/d)||1, ny = (dy/d)||0;
-      const impulse = 140;
-      b.vx += nx * impulse; b.vy += ny * impulse;
-      axolotl.nibbleT = 0.2;
-      state.stats.fun = clamp(state.stats.fun + 0.8);
+    }
+    if (play.active && play.ball){
+      const b = play.ball; const dx=b.x-axolotl.x, dy=b.y-axolotl.y, d=Math.hypot(dx,dy);
+      if (d < b.r + 16){ const nx=(dx/d)||1, ny=(dy/d)||0; const impulse=140; b.vx += nx*impulse; b.vy += ny*impulse; axolotl.nibbleT=0.2; state.stats.fun=clamp(state.stats.fun+0.8); }
     }
   }
 }
-
-function drawAxolotlSmall(){
-  const scale = axolotl.scale;
-  const x=axolotl.x, y=axolotl.y, dir=axolotl.dir;
+function drawAxolotl(){
+  const s=axolotl.scale, x=axolotl.x, y=axolotl.y, dir=axolotl.dir;
   const bodyColor = hexToRgb(state.color) || {r:246,g:182,b:210};
-  ctx.save(); ctx.translate(x,y); ctx.scale(dir*scale,1*scale);
+  ctx.save(); ctx.translate(x,y); ctx.scale(dir*s,1*s);
   const t = performance.now()/1000; const wag = Math.sin(t*8 + x*0.02)*6;
 
   ctx.fillStyle = `rgba(${bodyColor.r},${bodyColor.g},${bodyColor.b},0.9)`;
@@ -412,7 +446,7 @@ function drawAxolotlSmall(){
 /* =========================
    Food flakes & bubbles
    ========================= */
-const food = []; // {x,y,vx,vy,rot,spin,size,eaten:false}
+const food = [];
 function spawnFood(cx, cy, count=10){
   for(let i=0;i<count;i++){
     food.push({ x: cx+(Math.random()*40-20), y: cy+(Math.random()*10-5), vx:(Math.random()*20-10)/60,
@@ -425,36 +459,22 @@ function spawnFilterBubble(){ const x=24+Math.random()*10, y=canvas.clientHeight
   filterBubbles.push({x,y,r:2+Math.random()*2,a:0.8}); }
 
 /* =========================
-   PLAY MODE: ball chase
+   PLAY MODE
    ========================= */
-const play = {
-  active: false,
-  timer: 0,
-  ball: null,      // {x,y,vx,vy,r}
-  bubble: { text: "", t: 0 } // speech bubble timer
-};
+const play = { active:false, timer:0, ball:null, bubble:{text:"",t:0} };
 function startPlay(){
-  play.active = true;
-  play.timer = 20; // seconds
-  play.ball = {
-    x: canvas.clientWidth*0.55,
-    y: canvas.clientHeight*0.35,
-    vx: (Math.random()*120-60),
-    vy: (Math.random()*60),
-    r: 10
-  };
+  play.active = true; play.timer = 20;
+  play.ball = { x: canvas.clientWidth*0.55, y: canvas.clientHeight*0.35, vx:(Math.random()*120-60), vy:(Math.random()*60), r:10 };
 }
 function endPlay(){
-  play.active = false;
-  play.ball = null;
-  play.bubble.text = "Thank you for playing with me, Charlie";
-  play.bubble.t = 3.5; // show for 3.5s
+  play.active = false; play.ball = null;
+  const n = ownerName || 'friend';
+  play.bubble.text = `Thank you for playing with me, ${n}`;
+  play.bubble.t = 3.5;
 }
 function updateBall(dt){
-  if(!play.ball) return;
-  const b = play.ball;
-  b.vx *= 0.995; b.vy *= 0.995; // mild drag
-  b.y += b.vy * dt; b.x += b.vx * dt;
+  if(!play.ball) return; const b=play.ball;
+  b.vx *= 0.995; b.vy *= 0.995; b.y += b.vy * dt; b.x += b.vx * dt;
   const left=10, right=canvas.clientWidth-10, top=canvas.clientHeight*0.22, bottom=canvas.clientHeight*0.82;
   if(b.x-b.r < left){ b.x = left + b.r; b.vx = Math.abs(b.vx); }
   if(b.x+b.r > right){ b.x = right - b.r; b.vx = -Math.abs(b.vx); }
@@ -462,8 +482,7 @@ function updateBall(dt){
   if(b.y+b.r > bottom){ b.y = bottom - b.r; b.vy = -Math.abs(b.vy); }
 }
 function drawBall(){
-  if(!play.ball) return;
-  const b = play.ball;
+  if(!play.ball) return; const b=play.ball;
   const grad = ctx.createRadialGradient(b.x-3, b.y-3, 2, b.x, b.y, b.r);
   grad.addColorStop(0, '#ffe9a9'); grad.addColorStop(1, '#ffb36f');
   ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2); ctx.fill();
@@ -472,101 +491,80 @@ function drawBall(){
 }
 
 /* =========================
-   Simple interactions
+   Decor system (fixed params + edit/remove)
    ========================= */
-document.getElementById('feed').onclick = ()=>{
-  spawnFood(canvas.clientWidth*0.5, canvas.clientHeight*0.18, 18);
-  state.stats.hunger = clamp(state.stats.hunger + 10);
-  refreshBars(); saveState();
-};
-document.getElementById('play').onclick = ()=>{
-  startPlay();
-  state.stats.fun = clamp(state.stats.fun + 5);
-  refreshBars(); saveState();
-};
-// Sleep button: start/stop bedtime sequence
-document.getElementById('sleep').onclick = ()=>{
-  if (sleep.mode === 'awake') {
-    sleep.mode = 'going';      // start bedtime
-    state.sleeping = true;
-    state.stats.energy = clamp(state.stats.energy + 8);
-  } else {
-    sleep.mode = 'awake';      // wake up
-    state.sleeping = false;
-  }
-  refreshBars(); saveState();
-};
-document.getElementById('clean').onclick = ()=>{
-  state.stats.clean = clamp(state.stats.clean + 16);
-  for(let i=0;i<14;i++){
-    filterBubbles.push({ x: canvas.clientWidth*0.5 + (Math.random()*80-40),
-      y: canvas.clientHeight*0.78 + Math.random()*6, r: 2+Math.random()*3, a: 0.9 });
-  }
-  refreshBars(); saveState();
-};
-document.getElementById('decor').onclick = ()=>{
-  decorMenuEl.style.display = decorMenuEl.style.display === 'none' || decorMenuEl.style.display==='' ? 'block' : 'none';
-};
-document.getElementById('closeDecor').onclick = ()=>{ decorMenuEl.style.display = 'none'; };
-document.getElementById('addPlant').onclick = ()=>{ addDecor('plant'); };
-document.getElementById('addRock').onclick  = ()=>{ addDecor('rock');  };
-document.getElementById('addHouse').onclick = ()=>{ addDecor('house'); };
-// Tap tank = drop flakes at tap
-canvas.addEventListener('pointerdown', (e)=>{
-  const rect = canvas.getBoundingClientRect();
-  const x = (e.clientX - rect.left); const y = (e.clientY - rect.top);
-  spawnFood(x, Math.max(20,y), 8);
-});
+const decorMenuEl = document.getElementById('decorMenu');
+const editHintEl  = document.getElementById('editHint');
+let editMode = false;
+let nextDecorId = Date.now();
 
-/* =========================
-   Decor system
-   ========================= */
 function addDecor(type){
   const floorY = canvas.clientHeight*0.82;
   const x = 40 + Math.random()*(canvas.clientWidth-80);
   const y = floorY;
-  state.decor.push({ type, x, y });
+
+  // create fixed params to avoid animation/jitter
+  const item = { id: (++nextDecorId)+'' , type, x, y, params:{} };
+
+  if(type==='plant'){
+    item.params.stems = 4 + ((Math.random()*2)|0);
+    item.params.height = (canvas.clientHeight*0.18) * (0.6 + Math.random()*0.6);
+    // fixed leaf offsets for determinism
+    item.params.leaves = Array.from({length:5}, (_,i)=>({ side: (i%2?1:-1), rot: (i%2?0.6:-0.6) }));
+  } else if(type==='rock'){
+    item.params.w = 28 + Math.random()*30;
+    item.params.h = 16 + Math.random()*16;
+  } else if(type==='house'){
+    item.params.size = 82;
+    item.params.doorR = 16;
+  }
+
+  state.decor.push(item);
   saveState();
   rebuildDecorLayers();
-  decorMenuEl.style.display = 'none';
+  decorMenuEl.style.display='none';
+}
+
+function removeDecorById(id){
+  const idx = state.decor.findIndex(d=>d.id===id);
+  if(idx>=0){ state.decor.splice(idx,1); saveState(); rebuildDecorLayers(); }
+}
+
+function clearDecor(){
+  state.decor = []; saveState(); rebuildDecorLayers();
 }
 
 function rebuildDecorLayers(){
-  decorBack = [];
-  decorFront = [];
+  decorBack = []; decorFront = [];
   const floorY = canvas.clientHeight*0.82;
-
   for(const d of state.decor){
-    if(d.type === 'plant'){
-      // vary height
-      const h = (canvas.clientHeight*0.18) * (0.6 + Math.random()*0.6);
-      decorBack.push(ctx2 => {
-        drawPlantCluster(ctx2, d.x, floorY, 4 + ((Math.random()*2)|0), h);
+    if(d.type==='plant'){
+      const stems = d.params.stems, height = d.params.height;
+      // compile a deterministic draw
+      decorBack.push(g=>{
+        // draw stems
+        for(let i=0;i<stems;i++){
+          const x = d.x + (i - stems/2)*8;
+          drawPlant(g, x, floorY, height*(0.9 - i*0.05), 1.0); // fixed k
+        }
       });
-    } else if(d.type === 'rock'){
-      const w= 28 + Math.random()*30, h= 16 + Math.random()*16;
-      decorBack.push(ctx2 => { drawRock(ctx2, d.x, floorY-2, w, h); });
-    } else if(d.type === 'house'){
-      // house has back body and front frame (overlay) with doorway opening
-      const size = 82;
-      const doorwayR = 16;
-      decorBack.push(ctx2 => { drawHouseBack(ctx2, d.x, floorY-4, size, doorwayR); });
-      decorFront.push(ctx2 => { drawHouseFront(ctx2, d.x, floorY-4, size, doorwayR); });
-      // mark a “door center” for wandering interest
-      d.door = { x: d.x, y: floorY - 10 };
+    } else if(d.type==='rock'){
+      const w=d.params.w, h=d.params.h;
+      decorBack.push(g=> drawRock(g, d.x, floorY-2, w, h));
+    } else if(d.type==='house'){
+      const size=d.params.size, rDoor=d.params.doorR;
+      decorBack.push(g=> drawHouseBack(g, d.x, floorY-4, size, rDoor));
+      decorFront.push(g=> drawHouseFront(g, d.x, floorY-4, size, rDoor));
     }
   }
 }
 
 function drawHouseBack(g, x, y, size, rDoor){
   g.save(); g.translate(x,y);
-  // base body
   g.fillStyle = '#9aa7c6';
   roundRect(g, -size/2, -size*0.6, size, size*0.6, 10, true);
-  // roof (back)
   g.fillStyle = '#7e86a1';
   g.beginPath(); g.moveTo(-size/2, -size*0.6); g.lineTo(0, -size); g.lineTo(size/2, -size*0.6); g.closePath(); g.fill();
-  // doorway opening (clear with dark)
   g.fillStyle = '#111b24';
   g.beginPath(); g.ellipse(0, -size*0.25, rDoor*1.1, rDoor*1.5, 0, 0, Math.PI*2); g.fill();
   g.restore();
@@ -574,26 +572,52 @@ function drawHouseBack(g, x, y, size, rDoor){
 function drawHouseFront(g, x, y, size, rDoor){
   g.save(); g.translate(x,y);
   g.strokeStyle = 'rgba(0,0,0,0.18)'; g.lineWidth = 2;
-  g.fillStyle = 'rgba(255,255,255,0.08)';
-  // front frame around doorway
   g.beginPath(); g.ellipse(0, -size*0.25, rDoor*1.2, rDoor*1.6, 0, 0, Math.PI*2); g.stroke();
   g.restore();
 }
 
+/* Hit-testing for decor removal in edit mode */
+canvas.addEventListener('pointerdown', (e)=>{
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left), y = (e.clientY - rect.top);
+
+  // Normal tap: drop food (unless editing)
+  if(!editMode){
+    spawnFood(x, Math.max(20,y), 8);
+    return;
+  }
+
+  // Edit mode: find topmost decor within radius and remove
+  const floorY = canvas.clientHeight*0.82;
+  // search front first (houses), then back
+  let targetId = null;
+  // house doorway hit
+  for(let i=state.decor.length-1;i>=0;i--){
+    const d=state.decor[i];
+    if(d.type==='house'){
+      const dx = x - d.x, dy = y - (floorY-10);
+      if(Math.hypot(dx,dy) < 30){ targetId = d.id; break; }
+    }
+  }
+  if(!targetId){
+    for(let i=state.decor.length-1;i>=0;i--){
+      const d=state.decor[i];
+      const dx = x - d.x, dy = y - floorY;
+      const r = d.type==='rock' ? 30 : (d.type==='plant'? 24 : 0);
+      if(r && Math.hypot(dx,dy) < r){ targetId = d.id; break; }
+    }
+  }
+  if(targetId){ removeDecorById(targetId); }
+});
+
 /* =========================
-   Ambient life: snails
+   Ambient snails
    ========================= */
-const snails = []; // {x,y,mode:'floor'|'up'|'down', dir:1|-1, speed}
+const snails = [];
 function spawnSnails(n=2){
   const floorY = canvas.clientHeight*0.82;
   for(let i=0;i<n;i++){
-    snails.push({
-      x: 30 + Math.random()*(canvas.clientWidth-60),
-      y: floorY,
-      mode: 'floor',
-      dir: Math.random()<0.5 ? -1 : 1,
-      speed: 8 + Math.random()*6
-    });
+    snails.push({ x: 30 + Math.random()*(canvas.clientWidth-60), y: floorY, mode:'floor', dir: Math.random()<0.5?-1:1, speed: 8 + Math.random()*6 });
   }
 }
 function updateSnails(dt){
@@ -604,7 +628,7 @@ function updateSnails(dt){
       if(s.x < left+6){ s.x = left+6; s.mode='up'; }
       if(s.x > right-6){ s.x = right-6; s.mode='up'; }
       s.y = floorY;
-      if(Math.random()<0.001){ s.mode='up'; } // sometimes climb
+      if(Math.random()<0.001){ s.mode='up'; }
     } else if(s.mode==='up'){
       s.y -= s.speed * 0.6 * dt;
       if(s.y < top+10){ s.mode='down'; }
@@ -616,18 +640,52 @@ function updateSnails(dt){
 }
 function drawSnail(x,y){
   ctx.save(); ctx.translate(x,y);
-  // shell
   ctx.fillStyle = '#b58b64'; ctx.beginPath(); ctx.ellipse(0,-4,6,5,0,0,Math.PI*2); ctx.fill();
   ctx.strokeStyle='rgba(0,0,0,0.2)'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(-1,-4,3,0,Math.PI*1.7); ctx.stroke();
-  // body
   ctx.fillStyle = '#866f5a'; ctx.beginPath(); ctx.ellipse(-6,-2,5,2.5,0,0,Math.PI*2); ctx.fill();
-  // tentacles
   ctx.strokeStyle='#866f5a'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(-9,-4); ctx.lineTo(-11,-7); ctx.moveTo(-7,-4); ctx.lineTo(-8,-7); ctx.stroke();
   ctx.restore();
 }
 
 /* =========================
-   Game loop & physics
+   UI buttons & interactions
+   ========================= */
+document.getElementById('feed').onclick = ()=>{
+  spawnFood(canvas.clientWidth*0.5, canvas.clientHeight*0.18, 18);
+  state.stats.hunger = clamp(state.stats.hunger + 10);
+  refreshBars(); saveState();
+};
+document.getElementById('play').onclick = ()=>{
+  startPlay(); state.stats.fun = clamp(state.stats.fun + 5); refreshBars(); saveState();
+};
+document.getElementById('sleep').onclick = ()=>{
+  if (sleep.mode === 'awake') { sleep.mode = 'going'; state.sleeping = true; state.stats.energy = clamp(state.stats.energy + 8); }
+  else { sleep.mode = 'awake'; state.sleeping = false; }
+  refreshBars(); saveState();
+};
+document.getElementById('clean').onclick = ()=>{
+  state.stats.clean = clamp(state.stats.clean + 16);
+  for(let i=0;i<14;i++){
+    filterBubbles.push({ x: canvas.clientWidth*0.5 + (Math.random()*80-40), y: canvas.clientHeight*0.78 + Math.random()*6, r: 2+Math.random()*3, a: 0.9 });
+  }
+  refreshBars(); saveState();
+};
+document.getElementById('decor').onclick = ()=>{
+  decorMenuEl.style.display = (decorMenuEl.style.display==='block') ? 'none' : 'block';
+};
+document.getElementById('closeDecor').onclick = ()=>{ decorMenuEl.style.display='none'; };
+document.getElementById('addPlant').onclick = ()=> addDecor('plant');
+document.getElementById('addRock').onclick  = ()=> addDecor('rock');
+document.getElementById('addHouse').onclick = ()=> addDecor('house');
+document.getElementById('clearDecor').onclick= ()=>{ clearDecor(); decorMenuEl.style.display='none'; };
+document.getElementById('editDecor').onclick = ()=>{
+  editMode = !editMode;
+  editHintEl.style.display = editMode ? 'block' : 'none';
+  decorMenuEl.style.display='none';
+};
+
+/* =========================
+   Game loop & state ticks
    ========================= */
 function tickOneSecond(){
   const s = state.stats;
@@ -636,7 +694,7 @@ function tickOneSecond(){
   s.fun    = clamp(s.fun - (state.sleeping ? 0.35 : 0.7));
   s.clean  = clamp(s.clean - (state.sleeping ? 0.25 : 0.5));
   s.energy = clamp(s.energy + (state.sleeping ? +2.2 : -0.6));
-  if(play.active){ s.fun = clamp(s.fun + 1.0); } // boost fun while playing
+  if(play.active){ s.fun = clamp(s.fun + 1.0); }
   refreshBars();
   state.lastTick = Date.now();
   updateAgeBadge();
@@ -654,11 +712,9 @@ function offlineProgress(){
 }
 
 function update(dt){
-  // Darken overlay target based on sleep mode
   const targetDark = (sleep.mode === 'going' || sleep.mode === 'asleep') ? 0.65 : 0.0;
   sleep.dark += (targetDark - sleep.dark) * Math.min(1, dt * 3);
 
-  // food physics
   for(let i=food.length-1;i>=0;i--){
     const f=food[i]; if(f.eaten){ food.splice(i,1); continue; }
     f.vy += 0.006; f.vx *= 0.98; f.vy *= 0.99;
@@ -667,55 +723,34 @@ function update(dt){
     if(f.y > floorY){ f.y = floorY; f.vy = 0; f.vx = 0; f.spin = 0; }
     f.x = Math.max(8, Math.min(canvas.clientWidth-8, f.x));
   }
-  // filter bubbles
   if(Math.random() < 0.1) spawnFilterBubble();
   for(let i=filterBubbles.length-1;i>=0;i--){
     const b=filterBubbles[i]; b.y -= 30*dt; b.x += Math.sin(b.y*0.05)*4*dt; b.a -= 0.3*dt;
     if(b.a<=0 || b.y < canvas.clientHeight*0.18) filterBubbles.splice(i,1);
   }
 
-  // Play mode timer & ball
-  if(play.active){
-    play.timer -= dt;
-    if(play.timer <= 0){ endPlay(); }
-    else { updateBall(dt); }
-  }
-  // speech bubble timer
+  if(play.active){ play.timer -= dt; if(play.timer <= 0){ endPlay(); } else { updateBall(dt); } }
   if(play.bubble.t > 0){ play.bubble.t -= dt; if(play.bubble.t < 0) play.bubble.t = 0; }
 
-  // Zzz particles when asleep
   if (sleep.mode === 'asleep' && Math.random() < 0.04) {
-    sleep.zzz.push({
-      x: axolotl.x + (Math.random()*12-6),
-      y: axolotl.y - 22 + (Math.random()*4-2),
-      vy: -12 - Math.random()*8,
-      a: 1.0,
-      t: 0
-    });
+    sleep.zzz.push({ x: axolotl.x + (Math.random()*12-6), y: axolotl.y - 22 + (Math.random()*4-2), vy: -12 - Math.random()*8, a: 1.0, t: 0 });
   }
   for (let i = sleep.zzz.length - 1; i >= 0; i--) {
-    const z = sleep.zzz[i];
-    z.t += dt;
-    z.y += z.vy * dt;
-    z.a -= 0.35 * dt;
+    const z = sleep.zzz[i]; z.t += dt; z.y += z.vy * dt; z.a -= 0.35 * dt;
     if (z.a <= 0 || z.y < canvas.clientHeight * 0.18) sleep.zzz.splice(i, 1);
   }
 
-  // snails
   updateSnails(dt);
-
   updateAxolotl(dt);
 }
 
 function render(dt){
   const w=canvas.clientWidth, h=canvas.clientHeight;
-  ctx.drawImage(bg, 0, 0, w, h); // background
+  ctx.drawImage(bg, 0, 0, w, h);
   drawCaustics(w, h, dt);
 
-  // Draw decor (back layer)
   for(const draw of decorBack){ draw(ctx); }
 
-  // food flakes
   for(const f of food){
     ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.rot);
     const grd = ctx.createLinearGradient(-f.size, -f.size, f.size, f.size);
@@ -723,48 +758,22 @@ function render(dt){
     ctx.fillStyle = grd; roundRect(ctx, -f.size, -f.size*0.6, f.size*2, f.size*1.2, 2, true); ctx.restore();
   }
 
-  // ball (if playing)
   drawBall();
+  drawAxolotl();
 
-  // axolotl
-  drawAxolotlSmall();
-
-  // decor (front overlays like house frame)
   for(const draw of decorFront){ draw(ctx); }
 
-  // snails
   for(const s of snails){ drawSnail(s.x, s.y); }
 
-  // bubbles (filter/clean)
   for(const b of filterBubbles){
     ctx.globalAlpha = Math.max(0, Math.min(1,b.a));
     ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2); ctx.fill();
   }
   ctx.globalAlpha = 1;
 
-  // speech bubble (after play)
-  if(play.bubble.t > 0 && play.bubble.text){
-    drawSpeechBubble(axolotl.x, axolotl.y - 40, play.bubble.text);
-  }
+  if(play.bubble.t > 0 && play.bubble.text){ drawSpeechBubble(axolotl.x, axolotl.y - 40, play.bubble.text); }
 
-  // zzz glyphs (when asleep)
-  if (sleep.zzz.length) {
-    ctx.save();
-    ctx.font = '700 20px system-ui, sans-serif';
-    ctx.fillStyle = '#6a6a88';
-    for (const z of sleep.zzz) {
-      ctx.globalAlpha = Math.max(0, Math.min(1, z.a));
-      ctx.fillText('z', z.x, z.y);
-    }
-    ctx.restore();
-    ctx.globalAlpha = 1;
-  }
-
-  // Night overlay (on top of everything)
-  if (sleep.dark > 0.01) {
-    ctx.fillStyle = `rgba(10,20,40,${sleep.dark})`;
-    ctx.fillRect(0, 0, w, h);
-  }
+  if (sleep.dark > 0.01) { ctx.fillStyle = `rgba(10,20,40,${sleep.dark})`; ctx.fillRect(0, 0, w, h); }
 }
 
 /* =========================
@@ -779,11 +788,8 @@ function drawSpeechBubble(px, py, text){
   const lineH = 16, w = Math.max(60, Math.min(maxW, Math.max(...lines.map(l=>ctx.measureText(l).width)) + 2*padding));
   const h = lines.length*lineH + 2*padding;
   let x = px - w/2, y = py - h - 12;
-  x = Math.max(8, Math.min(canvas.clientWidth - w - 8, x));
-  y = Math.max(8, y);
-  ctx.save();
-  ctx.fillStyle='rgba(255,255,255,0.95)';
-  ctx.strokeStyle='rgba(0,0,0,0.12)'; ctx.lineWidth=1;
+  x = Math.max(8, Math.min(canvas.clientWidth - w - 8, x)); y = Math.max(8, y);
+  ctx.save(); ctx.fillStyle='rgba(255,255,255,0.95)'; ctx.strokeStyle='rgba(0,0,0,0.12)'; ctx.lineWidth=1;
   roundRect(ctx, x, y, w, h, 10, true); ctx.stroke();
   const tailX = Math.max(x+10, Math.min(x+w-10, px));
   ctx.beginPath(); ctx.moveTo(tailX-8, y+h); ctx.lineTo(tailX+8, y+h); ctx.lineTo(px, py-6); ctx.closePath();
@@ -794,17 +800,12 @@ function drawSpeechBubble(px, py, text){
 }
 function wrapText(text, maxWidth){
   const words=text.split(' '), lines=[]; let line='';
-  for(const w of words){
-    const test=line? line+' '+w : w;
-    if(ctx.measureText(test).width > maxWidth){ if(line) lines.push(line); line=w; }
-    else line=test;
-  }
-  if(line) lines.push(line);
-  return lines;
+  for(const w of words){ const test=line? line+' '+w : w; if(ctx.measureText(test).width > maxWidth){ if(line) lines.push(line); line=w; } else line=test; }
+  if(line) lines.push(line); return lines;
 }
 
 /* =========================
-   Loop / lifecycle
+   Loop & bootstrap
    ========================= */
 let last = 0, accum = 0;
 function frame(ts){
@@ -814,18 +815,15 @@ function frame(ts){
   update(dt); render(dt); requestAnimationFrame(frame);
 }
 
-/* =========================
-   Error overlay
-   ========================= */
+/* Debug overlay */
 const debugEl = document.getElementById('debug');
 function showError(e){ debugEl.style.display='block'; debugEl.textContent='Error: ' + (e?.message || e); }
 window.addEventListener('error', ev => showError(ev.error || ev.message));
 window.addEventListener('unhandledrejection', ev => showError(ev.reason));
 
-/* =========================
-   Start
-   ========================= */
+/* Start */
 function start(){
+  updateTitle();
   sizeCanvas();
   offlineProgress(); refreshBars(); updateAgeBadge();
   axolotl.x = canvas.clientWidth*0.55; axolotl.y = canvas.clientHeight*0.55;
