@@ -240,16 +240,28 @@
       g.fillEllipse(cx - 80, cy - 30, 22, 12);
       g.fillEllipse(cx,       cy - 30, 22, 12);
 
-      // mouth
-      g.lineStyle(4, 0x292b2e, 1);
-      const mood = moodScore();            // 0..1
-      const smile = Phaser.Math.Linear(0.3, 1.0, mood);
-      const mouthW = 42, mouthH = 14 * smile;
-      g.beginPath();
-      g.moveTo(cx - 52, cy - 20);
-      g.quadraticBezierTo(cx - 52 + mouthW, cy - 20 + mouthH, cx - 52 + mouthW * 2, cy - 20);
-      g.strokePath();
-    }
+ // mouth (polyline approximation of a quadratic curve)
+g.lineStyle(4, 0x292b2e, 1);
+const mood = moodScore();                 // 0..1
+const smile = Phaser.Math.Linear(0.3, 1.0, mood);
+const mouthW = 42, mouthH = 14 * smile;
+
+const x0 = cx - 52,        y0 = cy - 20;         // left
+const xc = x0 + mouthW,    yc = y0 + mouthH;     // control (peak)
+const x2 = x0 + mouthW*2,  y2 = y0;              // right
+
+g.beginPath();
+g.moveTo(x0, y0);
+
+// sample a quadratic Bezier with 24 segments
+for (let i = 1; i <= 24; i++) {
+  const t = i / 24;
+  const x = (1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * xc + t * t * x2;
+  const y = (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * yc + t * t * y2;
+  g.lineTo(x, y);
+}
+g.strokePath();
+
 
     function moodScore(){
       // normalized 0..1
@@ -454,3 +466,4 @@
   </script>
 </body>
 </html>
+
