@@ -10,7 +10,7 @@
       --card: #ffffff;
       --text: #222;
       --muted: #6b6b6b;
-      --accent: #7c5cff; /* UI accent */
+      --accent: #7c5cff;
       --good: #4caf50;
       --warn: #ffb300;
       --bad: #ff5252;
@@ -24,38 +24,23 @@
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
       color: var(--text);
     }
-    .wrap {
-      max-width: 420px;
-      margin: 0 auto;
-      padding: 16px 12px 32px;
-    }
+    .wrap { max-width: 420px; margin: 0 auto; padding: 16px 12px 32px; }
     .card {
       background: var(--card);
       border-radius: 20px;
       box-shadow: 0 10px 30px rgba(50, 34, 120, .1);
       padding: 10px 10px 14px;
     }
-    .topbar {
-      display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;
-    }
-    .title {
-      font-weight: 800; letter-spacing: .3px; font-size: 16px; display:flex; align-items:center; gap:8px;
-    }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+    .title { font-weight: 800; letter-spacing: .3px; font-size: 16px; display:flex; align-items:center; gap:8px; }
     .title .dot { width:10px; height:10px; border-radius:50%; background:var(--accent); }
-    .controls {
-      display:flex; align-items:center; gap:8px;
-    }
+    .controls { display:flex; align-items:center; gap:8px; }
     .controls input[type="text"] {
-      width: 120px; border: 1px solid #e5e5ee; border-radius: 12px; padding: 6px 10px; outline: none;
-      background:#fbfbff;
+      width: 120px; border: 1px solid #e5e5ee; border-radius: 12px; padding: 6px 10px; outline: none; background:#fbfbff;
     }
-    .controls input[type="color"] {
-      appearance: none; border: none; width: 32px; height: 32px; background: none; padding:0;
-    }
+    .controls input[type="color"] { appearance: none; border: none; width: 32px; height: 32px; background: none; padding:0; }
     .controls input[type="color"]::-webkit-color-swatch-wrapper { padding:0; }
-    .controls input[type="color"]::-webkit-color-swatch {
-      border: 2px solid #e5e5ee; border-radius: 8px;
-    }
+    .controls input[type="color"]::-webkit-color-swatch { border: 2px solid #e5e5ee; border-radius: 8px; }
     .canvas-holder { border-radius: 16px; overflow: hidden; outline: 1px solid rgba(124,92,255,.10); }
     .bars { display:grid; grid-template-columns: 1fr; gap: 8px; margin: 12px 4px 6px;}
     .bar { background:#f2f0ff; border-radius: 999px; height: 12px; position:relative; overflow:hidden; }
@@ -159,7 +144,6 @@
       const pct = clamp(val);
       el.style.width = pct + '%';
       labelEl.textContent = Math.round(pct);
-      // color feedback
       let bg = 'linear-gradient(90deg, #9d82ff, #ff7ad9)';
       if (pct < 30) bg = 'linear-gradient(90deg, var(--bad), #ff9aa6)';
       else if (pct < 60) bg = 'linear-gradient(90deg, var(--warn), #ffd16b)';
@@ -186,21 +170,14 @@
       type: Phaser.AUTO,
       parent: 'game',
       backgroundColor: '#f8f6ff',
-      scale: {
-        mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH,
-        width: 360,
-        height: 640
-      },
-      scene: {
-        preload, create, update
-      }
+      scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH, width: 360, height: 640 },
+      scene: { preload, create, update }
     };
     const game = new Phaser.Game(config);
 
     function preload(){}
 
-    // ✅ FIXED: Graphics API only (no save/restore/translate/rotate)
+    // Draw the axolotl using only supported Graphics APIs
     function drawAxolotl(g, color, w, h, blinkProgress = 1) {
       g.clear();
       const cx = w / 2, cy = h / 2 + 20;
@@ -212,12 +189,11 @@
       // body
       const c = Phaser.Display.Color.HexStringToColor(color).color;
       g.fillStyle(c, 1);
-      // tail, body, head
-      g.fillEllipse(cx + 40, cy + 20, 120, 60);
-      g.fillEllipse(cx, cy, 180, 100);
-      g.fillEllipse(cx - 40, cy - 40, 120, 100);
+      g.fillEllipse(cx + 40, cy + 20, 120, 60); // tail
+      g.fillEllipse(cx, cy, 180, 100);          // body
+      g.fillEllipse(cx - 40, cy - 40, 120, 100);// head
 
-      // gills (placed diagonally without transforms)
+      // gills (diagonal placement)
       g.fillStyle(0xff87c5, 1);
       for (let i = 0; i < 3; i++) {
         g.fillEllipse(cx - 95 - i * 6, cy - 60 + i * 14, 24 + i * 8, 10); // left
@@ -240,31 +216,28 @@
       g.fillEllipse(cx - 80, cy - 30, 22, 12);
       g.fillEllipse(cx,       cy - 30, 22, 12);
 
- // mouth (polyline approximation of a quadratic curve)
-g.lineStyle(4, 0x292b2e, 1);
-const mood = moodScore();                 // 0..1
-const smile = Phaser.Math.Linear(0.3, 1.0, mood);
-const mouthW = 42, mouthH = 14 * smile;
+      // mouth (polyline approximation of a quadratic curve)
+      g.lineStyle(4, 0x292b2e, 1);
+      const mood = moodScore();                 // 0..1
+      const smile = Phaser.Math.Linear(0.3, 1.0, mood);
+      const mouthW = 42, mouthH = 14 * smile;
 
-const x0 = cx - 52,        y0 = cy - 20;         // left
-const xc = x0 + mouthW,    yc = y0 + mouthH;     // control (peak)
-const x2 = x0 + mouthW*2,  y2 = y0;              // right
+      const x0 = cx - 52,        y0 = cy - 20;         // left
+      const xc = x0 + mouthW,    yc = y0 + mouthH;     // control (peak)
+      const x2 = x0 + mouthW*2,  y2 = y0;              // right
 
-g.beginPath();
-g.moveTo(x0, y0);
-
-// sample a quadratic Bezier with 24 segments
-for (let i = 1; i <= 24; i++) {
-  const t = i / 24;
-  const x = (1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * xc + t * t * x2;
-  const y = (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * yc + t * t * y2;
-  g.lineTo(x, y);
-}
-g.strokePath();
-
+      g.beginPath();
+      g.moveTo(x0, y0);
+      for (let i = 1; i <= 24; i++) {
+        const t = i / 24;
+        const x = (1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * xc + t * t * x2;
+        const y = (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * yc + t * t * y2;
+        g.lineTo(x, y);
+      }
+      g.strokePath();
+    }
 
     function moodScore(){
-      // normalized 0..1
       const s = state.stats;
       return Math.max(0, Math.min(1, (s.hunger + s.fun + s.energy + s.clean)/400));
     }
@@ -276,9 +249,10 @@ g.strokePath();
     function create(){
       scene = this;
 
-      // pleasant gradient background layer
-      const bg = this.add.graphics();
       const w = this.scale.width, h = this.scale.height;
+
+      // background
+      const bg = this.add.graphics();
       bg.fillStyle(0xfdfbff, 1); bg.fillRect(0,0,w,h);
 
       // water tint overlay to shift with mood
@@ -288,14 +262,12 @@ g.strokePath();
       axo = this.add.graphics();
       drawAxolotl(axo, state.color, w, h, 1);
 
-      // floating idle tween
+      // idle float
       this.tweens.add({ targets: axo, y: '-=8', yoyo: true, repeat: -1, duration: 1600, ease: 'sine.inOut' });
 
-      // Create a bubble texture and particle manager
+      // bubble texture + particle manager
       const g = this.make.graphics({ x:0, y:0, add:false });
-      g.fillStyle(0xffffff, 1);
-      g.fillCircle(8,8,8);
-      g.generateTexture('bubble', 16, 16);
+      g.fillStyle(0xffffff, 1); g.fillCircle(8,8,8); g.generateTexture('bubble', 16, 16);
       bubbles = this.add.particles('bubble');
 
       // Zzz text when sleeping
@@ -317,36 +289,34 @@ g.strokePath();
       document.getElementById('sleep').onclick = () => doAction('sleep');
       document.getElementById('clean').onclick = () => doAction('clean');
 
-      // restore after time passed (offline progression)
+      // restore after time passed
       offlineProgress();
 
-      // autosave
+      // autosave + decay tick
       this.time.addEvent({ delay: 2500, loop: true, callback: saveState });
-
-      // stat decay tick
-      this.time.addEvent({ delay: 1000, loop: true, callback: tick });
+      this.time.addEvent({ delay: 1000,  loop: true, callback: tick });
 
       updateMoodTint();
+
+      // expose for inputs
+      scene.updateName = () => nameText.setText(state.name);
+      scene.updateColor = () => {}; // redrawn each frame
     }
 
     function update(time, delta){
       // blink cycle
       blinkTimer += delta;
-      const blinkInterval = 2800 + Math.sin(time/5000)*400; // a bit organic
+      const blinkInterval = 2800 + Math.sin(time/5000)*400;
       if (blinkTimer > blinkInterval) { blinkOpen = 0; }
       if (blinkOpen === 0 && blinkTimer > blinkInterval + 140) { blinkOpen = 1; blinkTimer = 0; }
       drawAxolotl(axo, state.color, this.scale.width, this.scale.height, blinkOpen);
+
       // Zzz if sleeping
       if (state.sleeping && Math.random()<0.02){
         zzz.text += 'z';
         if (zzz.text.length>6) zzz.text = 'z';
       } else if (!state.sleeping){ zzz.text = ''; }
     }
-
-    function updateName(){ nameText.setText(state.name); }
-    function updateColor(){ /* redrawn every frame; nothing else needed */ }
-    scene && (scene.updateName = updateName);
-    scene && (scene.updateColor = updateColor);
 
     /***************
      * Game Logic
@@ -364,7 +334,7 @@ g.strokePath();
     }
 
     function updateMoodTint(){
-      const m = moodScore(); // 0..1
+      const m = moodScore();
       const good = 0x9dffc7, bad = 0xffc1c1;
       const mix = Phaser.Display.Color.Interpolate.ColorWithColor(
         Phaser.Display.Color.ValueToColor(bad),
@@ -390,80 +360,4 @@ g.strokePath();
       const s = state.stats;
       if (kind === 'feed'){
         s.hunger = clamp(s.hunger + 22);
-        s.clean  = clamp(s.clean - 4);
-        makeBubbleBurst(4);
-      }
-      if (kind === 'play'){
-        s.fun    = clamp(s.fun + 22);
-        s.energy = clamp(s.energy - 6);
-        ripple();
-      }
-      if (kind === 'sleep'){
-        state.sleeping = !state.sleeping;
-        if (state.sleeping){ s.energy = clamp(s.energy + 6); }
-        else { s.fun = clamp(s.fun + 6); }
-        spinZzz();
-      }
-      if (kind === 'clean'){
-        s.clean  = clamp(s.clean + 24);
-        makeBubbleBurst(12);
-      }
-      refreshBars();
-      updateMoodTint();
-      pulse();
-      saveState();
-    }
-
-    function ripple(){
-      const w = scene.scale.width, h = scene.scale.height;
-      const ring = scene.add.circle(w/2, h*0.7, 10, 0x9ddfff, 0.25);
-      scene.tweens.add({ targets: ring, alpha:0, scale:4, duration: 600, ease:'sine.out', onComplete: ()=> ring.destroy() });
-    }
-    function makeBubbleBurst(count=8){
-      const w = scene.scale.width, h = scene.scale.height;
-      const emitter = bubbles.createEmitter({
-        x: w/2, y: h*0.75,
-        speed: {min: -70, max: 70},
-        angle: {min: -110, max:-70},
-        lifespan: 800,
-        scale: { start: 0.8, end: 0.0 },
-        gravityY: 200
-      });
-      emitter.explode(count, w/2, h*0.75);
-      // remove emitter after use
-      scene.time.delayedCall(900, () => emitter.remove());
-    }
-    function spinZzz(){
-      scene.tweens.add({ targets: zzz, angle: '+=10', yoyo: true, duration: 200 });
-    }
-
-    function offlineProgress(){
-      const now = Date.now();
-      const dt = Math.max(0, now - (state.lastTick || now));
-      const seconds = Math.min(8*3600, Math.floor(dt/1000)); // cap 8h
-      for (let i=0;i<seconds;i++){
-        const s = state.stats;
-        const bd = state.sleeping ? 0.5 : 1.0;
-        s.hunger = clamp(s.hunger - bd/2);
-        s.fun    = clamp(s.fun - (state.sleeping ? 0.15 : 0.35));
-        s.clean  = clamp(s.clean - (state.sleeping ? 0.1 : 0.25));
-        s.energy = clamp(s.energy + (state.sleeping ? +1.2 : -0.3));
-      }
-      refreshBars();
-      updateMoodTint();
-      state.lastTick = now;
-      saveState();
-    }
-
-    // persist on tab hide
-    document.addEventListener('visibilitychange', ()=> { if (document.hidden) saveState(); });
-
-    // expose for inputs after scene is created
-    window.addEventListener('phaserCreated', () => {
-      scene.updateName = updateName;
-      scene.updateColor = updateColor;
-    });
-  </script>
-</body>
-</html>
-
+        s.clean  = clamp(s.clean - 4
