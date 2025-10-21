@@ -76,7 +76,7 @@
   <div class="wrap">
     <div class="card">
       <div class="topbar">
-        <div class="title"><span class="dot"></span> Charlie's Axolotl</div>
+        <div class="title"><span class="dot"></span> Axolotl Buddy</div>
         <div class="controls">
           <input id="nameInput" type="text" placeholder="Name me…" />
           <input id="colorInput" type="color" value="#ffb3d9" title="Axolotl color" />
@@ -187,7 +187,7 @@
       parent: 'game',
       backgroundColor: '#f8f6ff',
       scale: {
-        mode: Phaser.Scale.ENVELOP,
+        mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: 360,
         height: 640
@@ -200,59 +200,54 @@
 
     function preload(){}
 
-    // Helper to draw a stylized axolotl with Graphics (no images)
+    // ✅ FIXED: Graphics API only (no save/restore/translate/rotate)
     function drawAxolotl(g, color, w, h, blinkProgress = 1) {
       g.clear();
-      const cx = w/2, cy = h/2 + 20;
+      const cx = w / 2, cy = h / 2 + 20;
+
       // water
-      g.fillStyle(0xeef9ff, 1); g.fillRoundedRect(0, h*0.55, w, h*0.45, { tl: 24, tr: 24, bl: 16, br: 16 });
+      g.fillStyle(0xeef9ff, 1);
+      g.fillRoundedRect(0, h * 0.55, w, h * 0.45, 24);
+
       // body
       const c = Phaser.Display.Color.HexStringToColor(color).color;
       g.fillStyle(c, 1);
-      // tail
-      g.fillEllipse(cx+40, cy+20, 120, 60);
-      // body oval
+      // tail, body, head
+      g.fillEllipse(cx + 40, cy + 20, 120, 60);
       g.fillEllipse(cx, cy, 180, 100);
-      // head
-      g.fillEllipse(cx-40, cy-40, 120, 100);
-      // gills
-      const gill = (dx,dy, rot) => {
-        g.save(); g.translate(cx-70+dx, cy-50+dy); g.rotate(rot);
-        g.fillStyle(0xff87c5, 1);
-        for (let i=0;i<3;i++){ g.fillEllipse(0, i*14, 24 + i*8, 10); }
-        g.restore();
-      };
-      gill(-8,-2,-0.2); gill(0,10,0.0); gill(8,22,0.2);
-      const gillR = (dx,dy, rot) => {
-        g.save(); g.translate(cx-10+dx, cy-44+dy); g.rotate(rot);
-        g.fillStyle(0xff87c5, 1);
-        for (let i=0;i<3;i++){ g.fillEllipse(0, i*14, 24 + i*8, 10); }
-        g.restore();
-      };
-      gillR(88,-6,0.2); gillR(96,6,0.0); gillR(104,18,-0.2);
+      g.fillEllipse(cx - 40, cy - 40, 120, 100);
+
+      // gills (placed diagonally without transforms)
+      g.fillStyle(0xff87c5, 1);
+      for (let i = 0; i < 3; i++) {
+        g.fillEllipse(cx - 95 - i * 6, cy - 60 + i * 14, 24 + i * 8, 10); // left
+        g.fillEllipse(cx + 45 + i * 6,  cy - 55 + i * 14, 24 + i * 8, 10); // right
+      }
 
       // face
       const eyeOpen = blinkProgress > 0.2;
       g.fillStyle(0x292b2e, 1);
       if (eyeOpen) {
-        g.fillEllipse(cx-60, cy-48, 12, 16);
-        g.fillEllipse(cx-20, cy-48, 12, 16);
+        g.fillEllipse(cx - 60, cy - 48, 12, 16);
+        g.fillEllipse(cx - 20, cy - 48, 12, 16);
       } else {
-        g.fillRect(cx-66, cy-48, 12, 2);
-        g.fillRect(cx-26, cy-48, 12, 2);
+        g.fillRect(cx - 66, cy - 48, 12, 2);
+        g.fillRect(cx - 26, cy - 48, 12, 2);
       }
+
       // blush
-      g.fillStyle(0xffa2c8, .6);
-      g.fillEllipse(cx-80, cy-30, 22, 12);
-      g.fillEllipse(cx, cy-30, 22, 12);
+      g.fillStyle(0xffa2c8, 0.6);
+      g.fillEllipse(cx - 80, cy - 30, 22, 12);
+      g.fillEllipse(cx,       cy - 30, 22, 12);
+
       // mouth
       g.lineStyle(4, 0x292b2e, 1);
-      const mood = moodScore();
-      const smile = Phaser.Math.Linear(0.3, 1.0, mood); // 0..1
-      const mouthW = 42, mouthH = 14*smile;
+      const mood = moodScore();            // 0..1
+      const smile = Phaser.Math.Linear(0.3, 1.0, mood);
+      const mouthW = 42, mouthH = 14 * smile;
       g.beginPath();
-      g.moveTo(cx-52, cy-20);
-      g.quadraticBezierTo(cx-52+mouthW, cy-20+mouthH, cx-52+mouthW*2, cy-20);
+      g.moveTo(cx - 52, cy - 20);
+      g.quadraticBezierTo(cx - 52 + mouthW, cy - 20 + mouthH, cx - 52 + mouthW * 2, cy - 20);
       g.strokePath();
     }
 
@@ -284,16 +279,12 @@
       // floating idle tween
       this.tweens.add({ targets: axo, y: '-=8', yoyo: true, repeat: -1, duration: 1600, ease: 'sine.inOut' });
 
-      // Bubbles (for clean action)
-      bubbles = this.add.particles(0,0, 'b', {
-        // This empty key prevents Phaser errors if texture missing; we'll draw programmatically:
-      });
-      // We'll create a texture for bubbles via graphics
+      // Create a bubble texture and particle manager
       const g = this.make.graphics({ x:0, y:0, add:false });
       g.fillStyle(0xffffff, 1);
       g.fillCircle(8,8,8);
       g.generateTexture('bubble', 16, 16);
-      bubbles = this.add.particles(0,0,'bubble');
+      bubbles = this.add.particles('bubble');
 
       // Zzz text when sleeping
       zzz = this.add.text(w - 70, 70, '', { fontFamily: 'inherit', fontSize: '28px', fontStyle: '700', color: '#6a6a88' });
@@ -302,7 +293,7 @@
       titleText = this.add.text(16, 14, 'Axolotl Buddy', { fontFamily: 'inherit', fontSize: '16px', fontStyle: '700', color: '#7c5cff' });
       nameText  = this.add.text(16, 36, state.name, { fontFamily: 'inherit', fontSize: '22px', fontStyle: '800', color: '#2c2c3c' });
 
-      // Catch clicks (little splash)
+      // Click ripple
       this.input.on('pointerdown', (p) => {
         const sp = this.add.circle(p.x, p.y, 6, 0xaadfff, 0.9);
         this.tweens.add({ targets: sp, alpha: 0, scale: 2, duration: 400, onComplete: ()=> sp.destroy() });
@@ -342,7 +333,8 @@
 
     function updateName(){ nameText.setText(state.name); }
     function updateColor(){ /* redrawn every frame; nothing else needed */ }
-    scene.updateName = updateName; scene.updateColor = updateColor;
+    scene && (scene.updateName = updateName);
+    scene && (scene.updateColor = updateColor);
 
     /***************
      * Game Logic
@@ -361,7 +353,6 @@
 
     function updateMoodTint(){
       const m = moodScore(); // 0..1
-      // shift water tint bluer/greener with mood
       const good = 0x9dffc7, bad = 0xffc1c1;
       const mix = Phaser.Display.Color.Interpolate.ColorWithColor(
         Phaser.Display.Color.ValueToColor(bad),
@@ -374,6 +365,7 @@
     }
 
     function pulse(){
+      if (!scene) return;
       scene.tweens.add({ targets: axo, scale: 1.02, yoyo: true, duration: 140, ease: 'sine.inOut' });
     }
 
@@ -396,7 +388,6 @@
       }
       if (kind === 'sleep'){
         state.sleeping = !state.sleeping;
-        // small immediate effect
         if (state.sleeping){ s.energy = clamp(s.energy + 6); }
         else { s.fun = clamp(s.fun + 6); }
         spinZzz();
@@ -418,10 +409,17 @@
     }
     function makeBubbleBurst(count=8){
       const w = scene.scale.width, h = scene.scale.height;
-      bubbles.createEmitter({
-        x: w/2, y: h*0.75, speed: {min: -70, max: 70}, angle: {min: -110, max:-70},
-        lifespan: 800, scale: { start: 0.8, end: 0.0 }, quantity: count, gravityY: 200
-      }).explode(count, w/2, h*0.75);
+      const emitter = bubbles.createEmitter({
+        x: w/2, y: h*0.75,
+        speed: {min: -70, max: 70},
+        angle: {min: -110, max:-70},
+        lifespan: 800,
+        scale: { start: 0.8, end: 0.0 },
+        gravityY: 200
+      });
+      emitter.explode(count, w/2, h*0.75);
+      // remove emitter after use
+      scene.time.delayedCall(900, () => emitter.remove());
     }
     function spinZzz(){
       scene.tweens.add({ targets: zzz, angle: '+=10', yoyo: true, duration: 200 });
@@ -447,7 +445,12 @@
 
     // persist on tab hide
     document.addEventListener('visibilitychange', ()=> { if (document.hidden) saveState(); });
+
+    // expose for inputs after scene is created
+    window.addEventListener('phaserCreated', () => {
+      scene.updateName = updateName;
+      scene.updateColor = updateColor;
+    });
   </script>
 </body>
 </html>
-
