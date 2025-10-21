@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Axolotl Buddy</title>
 <style>
   :root{
@@ -16,18 +16,18 @@
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
     color:var(--text);
   }
-  .wrap{max-width:420px;margin:0 auto;padding:16px 12px 32px;}
+  .wrap{max-width:480px;margin:0 auto;padding:16px 12px calc(env(safe-area-inset-bottom, 0) + 24px);}
   .card{background:var(--card);border-radius:20px;box-shadow:0 10px 30px rgba(50,34,120,.1);padding:10px 10px 14px;}
   .topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
   .title{font-weight:800;letter-spacing:.3px;font-size:16px;display:flex;align-items:center;gap:8px;}
   .title .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);}
   .controls{display:flex;align-items:center;gap:8px;}
-  .controls input[type="text"]{width:120px;border:1px solid #e5e5ee;border-radius:12px;padding:6px 10px;outline:none;background:#fbfbff;}
+  .controls input[type="text"]{width:140px;border:1px solid #e5e5ee;border-radius:12px;padding:6px 10px;outline:none;background:#fbfbff;}
   .controls input[type="color"]{appearance:none;border:none;width:32px;height:32px;background:none;padding:0;}
   .controls input[type="color"]::-webkit-color-swatch-wrapper{padding:0;}
   .controls input[type="color"]::-webkit-color-swatch{border:2px solid #e5e5ee;border-radius:8px;}
   .canvas-holder{border-radius:16px;overflow:hidden;outline:1px solid rgba(124,92,255,.10);}
-  #gameCanvas{width:100%;aspect-ratio:9/16;display:block;background:#0b0b10;}
+  #gameCanvas{display:block;width:100%;background:#0b0b10;}
   .bars{display:grid;grid-template-columns:1fr;gap:8px;margin:12px 4px 6px;}
   .bar{background:#f2f0ff;border-radius:999px;height:12px;position:relative;overflow:hidden;}
   .bar span{position:absolute;left:0;top:0;bottom:0;width:50%;background:linear-gradient(90deg,#9d82ff,#ff7ad9);border-radius:999px;transition:width .25s ease;}
@@ -38,6 +38,7 @@
   .btn:active{transform:translateY(1px) scale(.99);}
   .btn .emoji{font-size:20px;}
   .hint{text-align:center;font-size:12px;color:var(--muted);margin-top:10px;}
+
   /* Debug overlay */
   #debug{position:fixed;left:8px;bottom:8px;max-width:90vw;background:#2b2b2b;color:#fff;font:12px/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
          padding:8px 10px;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.25);display:none;white-space:pre-wrap;z-index:9999;}
@@ -47,15 +48,15 @@
 <div class="wrap">
   <div class="card">
     <div class="topbar">
-      <div class="title"><span class="dot"></span> Charlie's Pet Axolotl</div>
+      <div class="title"><span class="dot"></span> Axolotl Buddy</div>
       <div class="controls">
         <input id="nameInput" type="text" placeholder="Name me…" />
         <input id="colorInput" type="color" value="#ffb3d9" title="Axolotl color" />
       </div>
     </div>
 
-    <div class="canvas-holder">
-      <canvas id="gameCanvas" width="360" height="640"></canvas>
+    <div class="canvas-holder" id="canvasHolder">
+      <canvas id="gameCanvas"></canvas>
     </div>
 
     <div class="bars">
@@ -83,8 +84,34 @@
 <div id="debug"></div>
 
 <script>
-/* ========= Utilities & State ========= */
-const STORAGE_KEY = 'axolotl_tama_canvas_v1';
+/* ====== Robust mobile-safe canvas sizing ====== */
+const holder = document.getElementById('canvasHolder');
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d', { alpha: false });
+
+// maintain 9:16, independent of CSS aspect-ratio support
+function sizeCanvas(){
+  const cssW = holder.clientWidth || 360;        // fallback if 0
+  const cssH = Math.round(cssW * 16/9);          // 9:16 portrait
+  canvas.style.width  = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+
+  // Hi-DPI scale
+  const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+  const w = cssW * dpr, h = cssH * dpr;
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  }
+  // Reset transform then scale so 1 unit = 1 CSS px
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.scale(dpr, dpr);
+}
+window.addEventListener('resize', sizeCanvas, { passive: true });
+window.addEventListener('orientationchange', () => setTimeout(sizeCanvas, 50), { passive: true });
+
+/* ====== State ====== */
+const STORAGE_KEY = 'axolotl_tama_canvas_v2';
 const defaultState = () => ({
   name: 'Axie',
   color: '#ffb3d9',
@@ -92,7 +119,6 @@ const defaultState = () => ({
   lastTick: Date.now(),
   sleeping: false
 });
-
 function loadState(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -103,10 +129,9 @@ function loadState(){
 }
 function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(_){} }
 function clamp(v){ return Math.max(0, Math.min(100, v)); }
-
 let state = loadState();
 
-/* ========= DOM refs ========= */
+/* ====== UI ====== */
 const nameInput = document.getElementById('nameInput');
 const colorInput = document.getElementById('colorInput');
 const hungerBar = document.getElementById('hungerBar');
@@ -117,12 +142,12 @@ const hungerVal = document.getElementById('hungerVal');
 const funVal    = document.getElementById('funVal');
 const energyVal = document.getElementById('energyVal');
 const cleanVal  = document.getElementById('cleanVal');
+
 nameInput.value = state.name;
 colorInput.value = state.color;
 
-/* ========= Canvas setup ========= */
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d', { alpha: false });
+nameInput.addEventListener('input', ()=>{ state.name = nameInput.value || 'Axie'; saveState(); });
+colorInput.addEventListener('input', ()=>{ state.color = colorInput.value; saveState(); });
 
 function moodScore(){
   const s = state.stats;
@@ -145,34 +170,21 @@ function refreshBars(){
   setBar(energyBar, s.energy, energyVal);
   setBar(cleanBar,  s.clean,  cleanVal);
 }
-refreshBars();
 
-/* ========= Input handlers ========= */
-nameInput.addEventListener('input', ()=>{ state.name = nameInput.value || 'Axie'; saveState(); });
-colorInput.addEventListener('input', ()=>{ state.color = colorInput.value; saveState(); });
-
+/* ====== Game logic ====== */
+let actionCooldown = false;
 document.getElementById('feed').onclick  = ()=> doAction('feed');
 document.getElementById('play').onclick  = ()=> doAction('play');
 document.getElementById('sleep').onclick = ()=> doAction('sleep');
 document.getElementById('clean').onclick = ()=> doAction('clean');
 
-/* ========= Game logic ========= */
-let actionCooldown = false;
 function doAction(kind){
-  if(actionCooldown) return;
-  actionCooldown = true;
-  setTimeout(()=> actionCooldown = false, 500);
-
+  if(actionCooldown) return; actionCooldown = true; setTimeout(()=> actionCooldown=false, 500);
   const s = state.stats;
   if(kind==='feed'){ s.hunger = clamp(s.hunger + 22); s.clean = clamp(s.clean - 4); spawnBubbles(6); }
   if(kind==='play'){ s.fun    = clamp(s.fun + 22); s.energy = clamp(s.energy - 6); spawnRipple(); }
-  if(kind==='sleep'){
-    state.sleeping = !state.sleeping;
-    if(state.sleeping) s.energy = clamp(s.energy + 6); else s.fun = clamp(s.fun + 6);
-    spawnZzz();
-  }
+  if(kind==='sleep'){ state.sleeping = !state.sleeping; if(state.sleeping) s.energy = clamp(s.energy + 6); else s.fun = clamp(s.fun + 6); spawnZzz(); }
   if(kind==='clean'){ s.clean  = clamp(s.clean + 24); spawnBubbles(12); }
-
   refreshBars(); saveState();
 }
 
@@ -190,7 +202,7 @@ function tickOneSecond(){
 function offlineProgress(){
   const now = Date.now();
   const dt = Math.max(0, now - (state.lastTick || now));
-  const seconds = Math.min(8*3600, Math.floor(dt/1000)); // cap at 8h
+  const seconds = Math.min(8*3600, Math.floor(dt/1000)); // cap 8h
   for(let i=0;i<seconds;i++){
     const s = state.stats;
     const bd = state.sleeping ? 0.5 : 1.0;
@@ -201,17 +213,18 @@ function offlineProgress(){
   }
   state.lastTick = now; refreshBars(); saveState();
 }
-offlineProgress();
 
-/* ========= Simple particles (bubbles, ripple, zzz) ========= */
+/* ====== Simple particles (bubbles, ripple, zzz) ====== */
 const bubbles = [];
 const ripples = [];
 let zzzT = 0, zzzActive = false;
 function spawnBubbles(n){
+  const cx = canvas.clientWidth/2;
+  const cy = canvas.clientHeight*0.75;
   for(let i=0;i<n;i++){
     bubbles.push({
-      x: canvas.width/2 + (Math.random()*80-40),
-      y: canvas.height*0.75 + (Math.random()*20-10),
+      x: cx + (Math.random()*80-40),
+      y: cy + (Math.random()*20-10),
       r: 3 + Math.random()*5,
       vx: (Math.random()*40-20)/60,
       vy: -(40+Math.random()*60)/60,
@@ -219,36 +232,113 @@ function spawnBubbles(n){
     });
   }
 }
-function spawnRipple(){
-  ripples.push({ x: canvas.width/2, y: canvas.height*0.72, r: 6, a: 0.35 });
-}
+function spawnRipple(){ ripples.push({ x: canvas.clientWidth/2, y: canvas.clientHeight*0.72, r: 6, a: 0.35 }); }
 function spawnZzz(){ zzzActive = true; zzzT = 0; }
 
-/* ========= Render ========= */
-let blinkT = 0, blinkOpen = true;
-let accum = 0;
-function render(dt){
-  // background water tint based on mood
-  const mood = moodScore(); // 0..1
+/* ====== Drawing helpers ====== */
+function roundRect(ctx, x, y, w, h, r, fill){
+  const rr = Math.min(r, w/2, h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+rr, y);
+  ctx.arcTo(x+w, y, x+w, y+h, rr);
+  ctx.arcTo(x+w, y+h, x, y+h, rr);
+  ctx.arcTo(x, y+h, x, y, rr);
+  ctx.arcTo(x, y, x+w, y, rr);
+  ctx.closePath();
+  if(fill) ctx.fill(); else ctx.stroke();
+}
+function ellipse(ctx, x, y, rx, ry){
+  ctx.beginPath();
+  if (ctx.ellipse) { ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI*2); }
+  else { ctx.save(); ctx.translate(x,y); ctx.scale(rx, ry); ctx.arc(0,0,1,0,Math.PI*2); ctx.restore(); }
+  ctx.fill();
+}
+function rect(ctx, x, y, w, h){ ctx.beginPath(); ctx.rect(x,y,w,h); ctx.fill(); }
+function hexToRgb(hex){
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return m ? {r: parseInt(m[1],16), g: parseInt(m[2],16), b: parseInt(m[3],16)} : null;
+}
+function drawAxolotl(ctx, cx, cy, hexColor, eyeOpen, mood){
+  const color = hexToRgb(hexColor) || {r:255,g:179,b:217};
+  ctx.save();
+  // Tail + body + head
+  ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
+  ellipse(ctx, cx+40, cy+20, 60, 30);
+  ellipse(ctx, cx,   cy,    90, 50);
+  ellipse(ctx, cx-40, cy-40, 60, 50);
+
+  // Gills
+  ctx.fillStyle = '#ff87c5';
+  for(let i=0;i<3;i++){
+    ellipse(ctx, cx-95 - i*6, cy-60 + i*14, 12 + i*4, 5);
+    ellipse(ctx, cx+45 + i*6,  cy-55 + i*14, 12 + i*4, 5);
+  }
+
+  // Face
+  ctx.fillStyle = '#292b2e';
+  if(eyeOpen){
+    ellipse(ctx, cx-60, cy-48, 6, 8);
+    ellipse(ctx, cx-20, cy-48, 6, 8);
+  }else{
+    rect(ctx, cx-66, cy-49, 12, 2);
+    rect(ctx, cx-26, cy-49, 12, 2);
+  }
+
+  // Blush
+  ctx.fillStyle = 'rgba(255,162,200,0.6)';
+  ellipse(ctx, cx-80, cy-30, 11, 6);
+  ellipse(ctx, cx,    cy-30, 11, 6);
+
+  // Mouth (Bezier sample)
+  ctx.strokeStyle = '#292b2e';
+  ctx.lineWidth = 4;
+  const smile = 0.3 + 0.7 * mood;
+  const x0 = cx - 52, y0 = cy - 20;
+  const xc = x0 + 42, yc = y0 + 14 * smile;
+  const x2 = x0 + 84, y2 = y0;
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  for (let i=1;i<=24;i++){
+    const t = i/24;
+    const x = (1-t)*(1-t)*x0 + 2*(1-t)*t*xc + t*t*x2;
+    const y = (1-t)*(1-t)*y0 + 2*(1-t)*t*yc + t*t*y2;
+    ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+/* ====== Render loop ====== */
+let blinkT = 0, blinkOpen = true, last = 0, accum = 0;
+function renderFrame(ts){
+  if(!last) last = ts;
+  const dt = Math.min(0.1, (ts - last)/1000);
+  last = ts;
+
+  accum += dt;
+  while(accum >= 1){ tickOneSecond(); accum -= 1; saveState(); }
+
+  // Background + water tint
+  const mood = moodScore();
   const good = [157,255,199], bad = [255,193,193];
   const mix = (a,b,t)=> Math.round(a + (b-a)*t);
   const r = mix(bad[0], good[0], mood), g = mix(bad[1], good[1], mood), b = mix(bad[2], good[2], mood);
 
+  // clear
   ctx.fillStyle = '#fdfbff';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillRect(0,0,canvas.clientWidth,canvas.clientHeight);
 
-  // water rectangle bottom
   ctx.fillStyle = `rgba(${r},${g},${b},0.22)`;
-  roundRect(ctx, 0, canvas.height*0.55, canvas.width, canvas.height*0.45, 24, true);
+  roundRect(ctx, 0, canvas.clientHeight*0.55, canvas.clientWidth, canvas.clientHeight*0.45, 24, true);
 
-  // Blink logic
+  // Blink
   blinkT += dt;
   if(blinkOpen && blinkT > 2.6 + Math.random()*0.6){ blinkOpen = false; blinkT = 0; }
   else if(!blinkOpen && blinkT > 0.14){ blinkOpen = true; blinkT = 0; }
 
-  drawAxolotl(ctx, canvas.width/2, canvas.height/2 + 20, state.color, blinkOpen, mood);
+  drawAxolotl(ctx, canvas.clientWidth/2, canvas.clientHeight/2 + 20, state.color, blinkOpen, mood);
 
-  // Particles: bubbles
+  // Bubbles
   for(let i=bubbles.length-1;i>=0;i--){
     const p = bubbles[i];
     p.x += p.vx * dt*60;
@@ -259,7 +349,7 @@ function render(dt){
     ctx.fillStyle = '#ffffff';
     ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
     ctx.globalAlpha = 1;
-    if(p.life <= 0 || p.y < canvas.height*0.55) bubbles.splice(i,1);
+    if(p.life <= 0 || p.y < canvas.clientHeight*0.55) bubbles.splice(i,1);
   }
 
   // Ripple
@@ -282,125 +372,15 @@ function render(dt){
       const t = (Math.sin(zzzT*2)+1)/2;
       ctx.font = '700 28px system-ui, sans-serif';
       ctx.fillStyle = '#6a6a88';
-      ctx.fillText('z', canvas.width - 70, 70 + t*4);
+      ctx.fillText('z', canvas.clientWidth - 70, 70 + t*4);
       if(zzzT > 1.2){ zzzActive = false; }
     } else if (Math.random() < 0.02){ zzzActive = true; zzzT = 0; }
   }
+
+  requestAnimationFrame(renderFrame);
 }
 
-function roundRect(ctx, x, y, w, h, r, fill){
-  const rr = Math.min(r, w/2, h/2);
-  ctx.beginPath();
-  ctx.moveTo(x+rr, y);
-  ctx.arcTo(x+w, y, x+w, y+h, rr);
-  ctx.arcTo(x+w, y+h, x, y+h, rr);
-  ctx.arcTo(x, y+h, x, y, rr);
-  ctx.arcTo(x, y, x+w, y, rr);
-  ctx.closePath();
-  if(fill) ctx.fill(); else ctx.stroke();
-}
-
-function drawAxolotl(ctx, cx, cy, hexColor, eyeOpen, mood){
-  // helper: ellipse (Canvas2D supports ctx.ellipse broadly)
-  const color = hexToRgb(hexColor) || {r:255,g:179,b:217};
-  ctx.save();
-
-  // Tail + body + head
-  ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
-  ellipse(ctx, cx+40, cy+20, 60, 30);
-  ellipse(ctx, cx,   cy,    90, 50);
-  ellipse(ctx, cx-40, cy-40, 60, 50);
-
-  // Gills (simple rows)
-  ctx.fillStyle = '#ff87c5';
-  for(let i=0;i<3;i++){
-    ellipse(ctx, cx-95 - i*6, cy-60 + i*14, 12 + i*4, 5);
-    ellipse(ctx, cx+45 + i*6,  cy-55 + i*14, 12 + i*4, 5);
-  }
-
-  // Face
-  ctx.fillStyle = '#292b2e';
-  if(eyeOpen){
-    ellipse(ctx, cx-60, cy-48, 6, 8);
-    ellipse(ctx, cx-20, cy-48, 6, 8);
-  }else{
-    rect(ctx, cx-66, cy-49, 12, 2);
-    rect(ctx, cx-26, cy-49, 12, 2);
-  }
-
-  // Blush
-  ctx.fillStyle = 'rgba(255,162,200,0.6)';
-  ellipse(ctx, cx-80, cy-30, 11, 6);
-  ellipse(ctx, cx,    cy-30, 11, 6);
-
-  // Mouth (Bezier approximation)
-  ctx.strokeStyle = '#292b2e';
-  ctx.lineWidth = 4;
-  const smile = 0.3 + 0.7 * mood;
-  const x0 = cx - 52, y0 = cy - 20;
-  const xc = x0 + 42, yc = y0 + 14 * smile;
-  const x2 = x0 + 84, y2 = y0;
-  ctx.beginPath();
-  ctx.moveTo(x0, y0);
-  for (let i=1;i<=24;i++){
-    const t = i/24;
-    const x = (1-t)*(1-t)*x0 + 2*(1-t)*t*xc + t*t*x2;
-    const y = (1-t)*(1-t)*y0 + 2*(1-t)*t*yc + t*t*y2;
-    ctx.lineTo(x,y);
-  }
-  ctx.stroke();
-
-  ctx.restore();
-}
-
-function ellipse(ctx, x, y, rx, ry){
-  ctx.beginPath();
-  if (ctx.ellipse) { ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI*2); }
-  else { // fallback
-    ctx.save(); ctx.translate(x,y); ctx.scale(rx, ry); ctx.arc(0,0,1,0,Math.PI*2); ctx.restore();
-  }
-  ctx.fill();
-}
-function rect(ctx, x, y, w, h){ ctx.beginPath(); ctx.rect(x,y,w,h); ctx.fill(); }
-function hexToRgb(hex){
-  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return m ? {r: parseInt(m[1],16), g: parseInt(m[2],16), b: parseInt(m[3],16)} : null;
-}
-
-/* ========= Main loop ========= */
-let last = performance.now();
-function loop(now){
-  try{
-    const dt = Math.min(0.1, (now - last)/1000); // cap delta
-    last = now;
-
-    accum += dt;
-    while(accum >= 1){ tickOneSecond(); accum -= 1; saveState(); }
-
-    render(dt);
-    requestAnimationFrame(loop);
-  }catch(e){
-    showError(e);
-  }
-}
-requestAnimationFrame(loop);
-
-/* ========= Resize handling (hi-dpi crisp) ========= */
-function resizeCanvas(){
-  const ratio = window.devicePixelRatio || 1;
-  const cssW = canvas.clientWidth;
-  const cssH = canvas.clientHeight;
-  const w = Math.floor(cssW * ratio);
-  const h = Math.floor(cssH * ratio);
-  if (canvas.width !== w || canvas.height !== h){
-    canvas.width = w; canvas.height = h;
-    ctx.setTransform(ratio,0,0,ratio,0,0); // keep drawing in CSS pixels
-  }
-}
-new ResizeObserver(resizeCanvas).observe(canvas);
-resizeCanvas();
-
-/* ========= Error overlay ========= */
+/* ====== Startup ====== */
 const debugEl = document.getElementById('debug');
 function showError(e){
   debugEl.style.display = 'block';
@@ -409,9 +389,17 @@ function showError(e){
 window.addEventListener('error', ev => showError(ev.error || ev.message));
 window.addEventListener('unhandledrejection', ev => showError(ev.reason));
 
-/* ========= Save on hide ========= */
+function start(){
+  sizeCanvas();         // ensure proper size before first frame
+  offlineProgress();
+  refreshBars();
+  requestAnimationFrame(renderFrame);
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', start, { once:true });
+} else { start(); }
+
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden) saveState(); });
 </script>
 </body>
 </html>
-
