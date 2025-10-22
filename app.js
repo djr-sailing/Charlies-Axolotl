@@ -11,7 +11,7 @@ function isDesktop() {
 }
 function sizeCanvas(){
   const cssW = Math.max(300, holder.clientWidth || 360);
-  const cssH = Math.round(cssW * (isDesktop() ? 9/16 : 16/9)); // auto: desktop landscape, phone portrait
+  const cssH = Math.round(cssW * (isDesktop() ? 9/16 : 16/9)); // auto: desktop=landscape, phone=portrait
   canvas.style.width = cssW + 'px';
   canvas.style.height = cssH + 'px';
 
@@ -30,7 +30,7 @@ window.addEventListener('orientationchange', () => setTimeout(sizeCanvas, 50), {
 /* =========================
    Persistence & UI state
    ========================= */
-const STORAGE_KEY = 'axolotl_split_v1';
+const STORAGE_KEY = 'axolotl_split_v2';
 const defaultState = () => ({
   ownerName: null,
   name: 'Axie',
@@ -358,6 +358,7 @@ function drawAxolotl(){
    Food & bubbles
    ========================= */
 const food = [];
+const filterBubbles = [];  // SINGLE declaration (fixed)
 function spawnFood(cx, cy, count=10){
   for(let i=0;i<count;i++){
     food.push({ x: cx+(Math.random()*40-20), y: cy+(Math.random()*10-5), vx:(Math.random()*20-10)/60,
@@ -365,7 +366,6 @@ function spawnFood(cx, cy, count=10){
       size: 4+Math.random()*5, eaten:false });
   }
 }
-const filterBubbles = [];
 function spawnFilterBubble(){ const x=24+Math.random()*10, y=canvas.clientHeight*0.25+Math.random()*30;
   filterBubbles.push({x,y,r:2+Math.random()*2,a:0.8}); }
 
@@ -635,7 +635,7 @@ document.getElementById('clean').onclick = ()=>{
 };
 
 /* =========================
-   Food drawing helper & speech
+   Drawing helpers
    ========================= */
 function drawSpeechBubble(px, py, text){
   const padding=8, maxW=Math.min(240, canvas.clientWidth*0.8);
@@ -663,10 +663,9 @@ function hexToRgb(hex){ const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec
   return m ? {r:parseInt(m[1],16), g:parseInt(m[2],16), b:parseInt(m[3],16)} : null; }
 
 /* =========================
-   Game loop & state ticks
+   Game loop
    ========================= */
 let last = 0, accum = 0;
-const filterBubbles = []; // declared earlier, ensure in scope (already)
 function update(dt){
   const targetDark = (sleep.mode === 'going' || sleep.mode === 'asleep') ? 0.65 : 0.0;
   sleep.dark += (targetDark - sleep.dark) * Math.min(1, dt * 3);
@@ -741,13 +740,6 @@ function frame(ts){
   accum += dt; while(accum >= 1){ tickOneSecond(); accum -= 1; saveState(); }
   update(dt); render(dt); requestAnimationFrame(frame);
 }
-
-/* =========================
-   Helpers shared
-   ========================= */
-function drawSpeechBubble(px, py, text){ /* defined above */ }
-function wrapText(text, maxWidth){ /* defined above */ }
-function hexToRgb(hex){ /* defined above */ }
 
 /* =========================
    Start / errors
