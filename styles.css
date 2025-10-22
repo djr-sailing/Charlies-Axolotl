@@ -10,8 +10,9 @@ html,body{
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
   color:var(--text);
 }
-.wrap{max-width:520px;margin:0 auto;padding:16px 12px calc(env(safe-area-inset-bottom, 0) + 24px); transition:max-width .2s ease;}
+.wrap{max-width:520px;margin:0 auto;padding:10px 10px calc(env(safe-area-inset-bottom, 0) + 16px); transition:max-width .2s ease;}
 @media (min-width: 900px){ .wrap{max-width:1100px;} }
+
 .card{position:relative;background:var(--card);border-radius:20px;box-shadow:0 10px 30px rgba(50,34,120,.1);padding:10px 10px 14px;}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap}
 .title{font-weight:800;letter-spacing:.3px;font-size:16px;display:flex;align-items:center;gap:8px;}
@@ -21,8 +22,10 @@ html,body{
 .controls input[type="color"]{appearance:none;border:none;width:32px;height:32px;background:none;padding:0;}
 .controls input[type="color"]::-webkit-color-swatch-wrapper{padding:0;}
 .controls input[type="color"]::-webkit-color-swatch{border:2px solid #e5e5ee;border-radius:8px;}
+
 .canvas-holder{position:relative;border-radius:16px;overflow:hidden;outline:1px solid rgba(124,92,255,.10);}
 #gameCanvas{display:block;width:100%;background:#0b0b10;}
+
 /* Age badge */
 .age-badge{
   position:absolute; left:8px; top:8px;
@@ -32,19 +35,29 @@ html,body{
 }
 .age-badge .icon{width:14px;height:14px;border-radius:3px;background:linear-gradient(180deg,#ffb3d1,#ff87c5); position:relative;}
 .age-badge .icon::after{content:''; position:absolute; left:3px; top:-3px; width:8px; height:4px; border-radius:2px; background:#fff;}
-/* Bars */
-.bars{display:grid;grid-template-columns:1fr;gap:8px;margin:12px 4px 6px;}
-.bar{background:#f2f0ff;border-radius:999px;height:12px;position:relative;overflow:hidden;}
+
+/* Bars – compact */
+.bars{display:grid;grid-template-columns:1fr;gap:6px;margin:8px 2px 4px;}
+.bars.compact .barlabel{font-size:11px;color:var(--muted);margin:0 4px 2px;display:flex;justify-content:space-between;}
+.bar{background:#f2f0ff;border-radius:999px;height:10px;position:relative;overflow:hidden;}
+.bar.sm{height:6px;}
 .bar span{position:absolute;left:0;top:0;bottom:0;width:50%;background:linear-gradient(90deg,#9d82ff,#ff7ad9);border-radius:999px;transition:width .25s ease;}
-.barlabel{font-size:12px;color:var(--muted);margin:0 6px 2px;display:flex;justify-content:space-between;}
+
+/* Actions */
 .actions{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px;}
 @media (min-width: 900px){ .actions{grid-template-columns:repeat(5, auto); justify-content:flex-start} }
 .btn{border:none;padding:10px 8px;border-radius:14px;background:#f5f3ff;cursor:pointer;font-weight:700;font-size:12px;
      display:flex;flex-direction:column;align-items:center;gap:6px;box-shadow:inset 0 0 0 1px rgba(124,92,255,.15);}
 .btn:active{transform:translateY(1px) scale(.99);}
 .btn .emoji{font-size:20px;}
-.hint{text-align:center;font-size:12px;color:var(--muted);margin-top:10px;}
-/* Cog menu */
+.hint{text-align:center;font-size:12px;color:var(--muted);margin-top:8px}
+
+/* Hide desktop actions on small screens; show mobile FAB */
+@media (max-width: 700px){
+  .actions{display:none;}
+}
+
+/* Cog (settings) menu */
 .cog{position:absolute; right:10px; top:10px; z-index:6; border:none; background:#f5f3ff; border-radius:12px; padding:8px 10px; cursor:pointer; box-shadow:inset 0 0 0 1px rgba(124,92,255,.15); font-weight:800;}
 #menuPanel{
   position:absolute; right:10px; top:48px; z-index:7; display:none;
@@ -59,10 +72,36 @@ html,body{
   width:100%; text-align:left;
 }
 .divider{border:none;border-top:1px solid #eee;margin:6px 0}
+
+/* Mobile Actions FAB */
+.fab{
+  position:absolute; right:10px; bottom:10px; z-index:6;
+  width:44px; height:44px; border-radius:14px; border:none; cursor:pointer;
+  background:#7c5cff; color:#fff; font-weight:900; font-size:18px;
+  box-shadow:0 8px 20px rgba(0,0,0,.25);
+  display:none;
+}
+.fab-menu{
+  position:absolute; right:10px; bottom:60px; z-index:7; display:none;
+  background:rgba(255,255,255,0.98); border:1px solid rgba(0,0,0,0.1); border-radius:12px; padding:8px; min-width:180px;
+  box-shadow:0 12px 30px rgba(0,0,0,.15);
+}
+.fab-menu button{
+  display:block; width:100%; text-align:left; border:none; background:#f5f3ff; padding:8px 10px; border-radius:10px; font-weight:700; cursor:pointer; margin:4px 0;
+  box-shadow:inset 0 0 0 1px rgba(124,92,255,.15);
+}
+
+/* Show FAB only on small screens */
+@media (max-width: 700px){
+  .fab{display:block;}
+}
+
+/* Edit hint */
 #editHint{
   position:absolute; right:8px; bottom:8px; z-index:5; display:none;
   background:rgba(255,255,255,0.92); border:1px solid rgba(0,0,0,0.1); border-radius:10px; padding:6px 8px; font-size:12px;
 }
+
 /* Owner modal */
 #ownerModal{
   position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9999;
@@ -76,6 +115,7 @@ html,body{
 #ownerModal input{flex:1; border:1px solid #e5e5ee;border-radius:12px;padding:10px}
 #ownerModal button{border:none;border-radius:12px;padding:10px 14px;font-weight:800;background:#7c5cff;color:#fff;cursor:pointer}
 .subtle{font-size:12px;color:#666;margin-top:8px}
+
 #debug{
   position:fixed;left:8px;bottom:8px;max-width:90vw;background:#2b2b2b;color:#fff;font:12px/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   padding:8px 10px;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.25);display:none;white-space:pre-wrap;z-index:9999;
