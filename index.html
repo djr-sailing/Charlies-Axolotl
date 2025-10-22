@@ -19,8 +19,8 @@
         </div>
       </div>
 
-      <!-- Cog menu -->
-      <button class="cog" id="cogBtn">⚙️</button>
+      <!-- Settings (cog) menu -->
+      <button class="cog" id="cogBtn" aria-label="Settings">⚙️</button>
       <div id="menuPanel" role="menu" aria-label="Game menu">
         <div class="title">Menu</div>
         <button id="menuAddPlant">🌿 Add plant</button>
@@ -39,25 +39,37 @@
           <span class="icon"></span><span id="ageText">1 day old</span>
         </div>
         <div id="editHint">Remove mode: tap a décor item to delete</div>
+
+        <!-- Mobile actions burger -->
+        <button id="actionsFab" class="fab" aria-label="Actions">☰</button>
+        <div id="actionsPanel" class="fab-menu" role="menu" aria-label="Actions menu">
+          <button id="mFeed">🫗 Feed</button>
+          <button id="mPlay">🎾 Play</button>
+          <button id="mSleep">🌙 Sleep</button>
+          <button id="mClean">🫧 Clean</button>
+          <button id="mOwner">👤 Owner</button>
+        </div>
       </div>
 
-      <div class="bars">
-        <div class="barlabel"><span>Hunger</span><strong id="hungerVal">—</strong></div>
-        <div class="bar"><span id="hungerBar"></span></div>
-        <div class="barlabel"><span>Fun</span><strong id="funVal">—</strong></div>
-        <div class="bar"><span id="funBar"></span></div>
-        <div class="barlabel"><span>Energy</span><strong id="energyVal">—</strong></div>
-        <div class="bar"><span id="energyBar"></span></div>
-        <div class="barlabel"><span>Clean</span><strong id="cleanVal">—</strong></div>
-        <div class="bar"><span id="cleanBar"></span></div>
-      </div>
-
+      <!-- Desktop / tablet actions -->
       <div class="actions">
         <button class="btn" id="feed"><span class="emoji">🫗</span>Feed</button>
         <button class="btn" id="play"><span class="emoji">🎾</span>Play</button>
         <button class="btn" id="sleep"><span class="emoji">🌙</span>Sleep</button>
         <button class="btn" id="clean"><span class="emoji">🫧</span>Clean</button>
         <button class="btn" id="ownerBtn"><span class="emoji">👤</span>Owner</button>
+      </div>
+
+      <!-- Smaller, unobtrusive bars -->
+      <div class="bars compact">
+        <div class="barlabel"><span>Hunger</span><strong id="hungerVal">—</strong></div>
+        <div class="bar sm"><span id="hungerBar"></span></div>
+        <div class="barlabel"><span>Fun</span><strong id="funVal">—</strong></div>
+        <div class="bar sm"><span id="funBar"></span></div>
+        <div class="barlabel"><span>Energy</span><strong id="energyVal">—</strong></div>
+        <div class="bar sm"><span id="energyBar"></span></div>
+        <div class="barlabel"><span>Clean</span><strong id="cleanVal">—</strong></div>
+        <div class="bar sm"><span id="cleanBar"></span></div>
       </div>
 
       <div class="hint">Tip: tap the tank to drop a food flake. Everything autosaves.</div>
