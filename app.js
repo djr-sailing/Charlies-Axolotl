@@ -5,16 +5,36 @@ const holder = document.getElementById('canvasHolder');
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d', { alpha: false });
 
-function isDesktop() {
-  // desktop if width >= 900px OR aspect is wider than tall
-  return window.innerWidth >= 900 || window.innerWidth > window.innerHeight;
-}
+function isPhone() { return window.innerWidth <= 700; }
+function isDesktop() { return window.innerWidth >= 900 || window.innerWidth > window.innerHeight; }
+
+function measure(el) { return el ? el.getBoundingClientRect().height : 0; }
+
 function sizeCanvas(){
+  // Base width from container
   const cssW = Math.max(300, holder.clientWidth || 360);
-  const cssH = Math.round(cssW * (isDesktop() ? 9/16 : 16/9)); // auto: desktop=landscape, phone=portrait
+
+  // Preferred height by aspect (phone portrait vs desktop landscape)
+  const ratioH = Math.round(cssW * (isDesktop() ? 9/16 : 16/9));
+
+  // On phones: cap height to the available viewport to avoid scrolling
+  let cssH = ratioH;
+  if (isPhone()) {
+    // elements above/below the canvas inside the card
+    const topbarH = measure(document.querySelector('.topbar'));
+    const barsH   = measure(document.querySelector('.bars'));
+    const hintH   = measure(document.querySelector('.hint'));
+    const cardPad = 40; // padding + title margins etc
+    const reserved = topbarH + barsH + hintH + cardPad;
+    const available = Math.max(220, Math.floor(window.innerHeight - reserved));
+    cssH = Math.min(ratioH, available);
+  }
+
+  // Apply CSS size
   canvas.style.width = cssW + 'px';
   canvas.style.height = cssH + 'px';
 
+  // Scale for device pixel ratio
   const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
   const w = cssW * dpr, h = cssH * dpr;
   if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
@@ -30,7 +50,7 @@ window.addEventListener('orientationchange', () => setTimeout(sizeCanvas, 50), {
 /* =========================
    Persistence & UI state
    ========================= */
-const STORAGE_KEY = 'axolotl_split_v2';
+const STORAGE_KEY = 'axolotl_split_v3';
 const defaultState = () => ({
   ownerName: null,
   name: 'Axie',
@@ -358,7 +378,7 @@ function drawAxolotl(){
    Food & bubbles
    ========================= */
 const food = [];
-const filterBubbles = [];  // SINGLE declaration (fixed)
+const filterBubbles = [];  // single declaration
 function spawnFood(cx, cy, count=10){
   for(let i=0;i<count;i++){
     food.push({ x: cx+(Math.random()*40-20), y: cy+(Math.random()*10-5), vx:(Math.random()*20-10)/60,
@@ -409,7 +429,10 @@ document.getElementById('cogBtn').onclick = ()=>{
   menuPanel.style.display = menuPanel.style.display==='block' ? 'none' : 'block';
 };
 document.addEventListener('click', (e)=>{
-  if (!menuPanel.contains(e.target) && e.target.id !== 'cogBtn') menuPanel.style.display='none';
+  if (!menuPanel.contains(e.target) && e.target.id !== 'cogBtn' && e.target.id !== 'actionsFab') {
+    menuPanel.style.display='none';
+    actionsPanel.style.display='none';
+  }
 });
 
 const decorMenu = {
@@ -611,28 +634,102 @@ function drawSnail(x,y){
 }
 
 /* =========================
-   Buttons
+   Buttons (desktop & mobile)
    ========================= */
-document.getElementById('feed').onclick = ()=>{
+function doFeed(){
   spawnFood(canvas.clientWidth*0.5, canvas.clientHeight*0.18, 18);
   state.stats.hunger = clamp(state.stats.hunger + 10);
   refreshBars(); saveState();
-};
-document.getElementById('play').onclick = ()=>{
+}
+function doPlay(){
   startPlay(); state.stats.fun = clamp(state.stats.fun + 5); refreshBars(); saveState();
-};
-document.getElementById('sleep').onclick = ()=>{
+}
+function doSleep(){
   if (sleep.mode === 'awake') { sleep.mode = 'going'; state.sleeping = true; state.stats.energy = clamp(state.stats.energy + 8); }
   else { sleep.mode = 'awake'; state.sleeping = false; }
   refreshBars(); saveState();
-};
-document.getElementById('clean').onclick = ()=>{
+}
+function doClean(){
   state.stats.clean = clamp(state.stats.clean + 16);
   for(let i=0;i<14;i++){
     filterBubbles.push({ x: canvas.clientWidth*0.5 + (Math.random()*80-40), y: canvas.clientHeight*0.78 + Math.random()*6, r: 2+Math.random()*3, a: 0.9 });
   }
   refreshBars(); saveState();
+}
+
+// Desktop buttons
+document.getElementById('feed').onclick  = doFeed;
+document.getElementById('play').onclick  = doPlay;
+document.getElementById('sleep').onclick = doSleep;
+document.getElementById('clean').onclick = doClean;
+document.getElementById('ownerBtn').onclick = ()=>{ ownerInput.value = ownerName || ''; ownerModal.style.display='flex'; };
+
+// Mobile FAB menu
+const actionsFab   = document.getElementById('actionsFab');
+const actionsPanel = document.getElementById('actionsPanel');
+actionsFab.addEventListener('click', (e)=>{
+  e.stopPropagation();
+  actionsPanel.style.display = (actionsPanel.style.display==='block') ? 'none' : 'block';
+});
+function closeActions(){ actionsPanel.style.display='none'; }
+
+document.getElementById('mFeed').onclick  = ()=>{ doFeed();  closeActions(); };
+document.getElementById('mPlay').onclick  = ()=>{ doPlay();  closeActions(); };
+document.getElementById('mSleep').onclick = ()=>{ doSleep(); closeActions(); };
+document.getElementById('mClean').onclick = ()=>{ doClean(); closeActions(); };
+document.getElementById('mOwner').onclick = ()=>{ ownerInput.value = ownerName || ''; ownerModal.style.display='flex'; closeActions(); };
+
+/* =========================
+   Speech bubble logic: rare + mood-based
+   ========================= */
+const SPEECH = {
+  hungry:  ["I'm getting hungry…", "Food, please?", "My tummy rumbles…"],
+  bored:   ["Can we play soon?", "I'm a bit bored…", "Chase the ball?"],
+  tired:   ["I'm sleepy…", "Nap time?", "Can we dim the lights?"],
+  dirty:   ["Water feels icky…", "Could you clean the tank?", "Bubbles please!"],
+  happy:   ["This is a nice day.", "I like our tank!", "Swimming feels great!"]
 };
+let lastSpeechAt = 0;              // timestamp ms
+const MIN_SPEECH_INTERVAL = 120000; // 2 minutes
+const HAPPY_SPEECH_CHANCE = 0.06;   // only small chance when all is good
+const ALERT_SPEECH_CHANCE = 0.20;   // chance when a stat is low and cooldown passed
+
+function maybeSpeak(dt){
+  if (play.active || sleep.mode !== 'awake') return; // don't chatter during play or sleep
+  const now = performance.now();
+  if (now - lastSpeechAt < MIN_SPEECH_INTERVAL) return;
+
+  // Determine need severities
+  const s = state.stats;
+  const lowHunger = s.hunger < 25;
+  const lowFun    = s.fun    < 25;
+  const lowEnergy = s.energy < 22;
+  const lowClean  = s.clean  < 22;
+
+  // Pick one pressing need (random among those that are low)
+  const needs = [];
+  if (lowHunger) needs.push('hungry');
+  if (lowFun)    needs.push('bored');
+  if (lowEnergy) needs.push('tired');
+  if (lowClean)  needs.push('dirty');
+
+  let chosen = null;
+  if (needs.length){
+    if (Math.random() < ALERT_SPEECH_CHANCE){ chosen = needs[(Math.random()*needs.length)|0]; }
+  } else {
+    // all good → rare happy line if mood is high
+    if (moodScore() > 0.85 && Math.random() < HAPPY_SPEECH_CHANCE){
+      chosen = 'happy';
+    }
+  }
+
+  if (chosen){
+    const arr = SPEECH[chosen];
+    const msg = arr[(Math.random()*arr.length)|0];
+    play.bubble = { text: msg, t: 3.0 };
+    lastSpeechAt = now;
+  }
+}
 
 /* =========================
    Drawing helpers
@@ -698,10 +795,8 @@ function update(dt){
   updateSnails(dt);
   updateAxolotl(dt);
 
-  // mood reactions (rare)
-  const m = moodScore();
-  if (m < 0.3 && Math.random() < 0.0006) play.bubble = { text:"I'm feeling a bit sad...", t:3 };
-  if (m > 0.85 && Math.random() < 0.0006) play.bubble = { text:"I'm so happy!", t:3 };
+  // RARE mood-driven speech
+  maybeSpeak(dt);
 }
 function render(dt){
   const w=canvas.clientWidth, h=canvas.clientHeight;
